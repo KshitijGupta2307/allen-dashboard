@@ -6,7 +6,7 @@ import { formatInt } from "../../lib/format";
 
 export function TatChart({ data }: { data: Bucket[] }) {
   return (
-    <ChartCard title="Turnaround time" subtitle="Days from report to removal" height={240}>
+    <ChartCard title="Turnaround time" subtitle="Days from report to removal (0-4d)" height={240}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 16, right: 8, bottom: 0, left: -16 }} barCategoryGap="30%">
           <CartesianGrid stroke="var(--gridline)" vertical={false} strokeWidth={1} />

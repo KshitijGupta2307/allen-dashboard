@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ChevronDownIcon } from "./icons";
 
 interface MultiSelectProps {
   label: string;
@@ -15,8 +16,15 @@ export function MultiSelect({ label, options, selected, onChange }: MultiSelectP
     function onDocClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
   const toggle = (opt: string) => {
@@ -31,13 +39,20 @@ export function MultiSelect({ label, options, selected, onChange }: MultiSelectP
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
         className="text-[12px] border border-[var(--border)] rounded-md px-2.5 py-1.5 bg-[var(--surface-1)] hover:bg-[var(--page)] hover:border-[var(--border-strong)] transition-colors duration-150 flex items-center gap-1.5 min-w-[120px] justify-between"
       >
         <span className="text-[var(--text-muted)]">{label}:</span>
         <span className="text-[var(--text-primary)] font-medium truncate max-w-[100px]">{summary}</span>
+        <ChevronDownIcon
+          size={14}
+          className={`text-[var(--text-muted)] shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+        />
       </button>
       {open && (
         <div
+          role="listbox"
           className="absolute z-20 mt-1.5 min-w-[200px] rounded-xl border border-[var(--border-strong)] bg-[var(--surface-2)] p-1.5"
           style={{ boxShadow: "var(--shadow-card-hover)" }}
         >

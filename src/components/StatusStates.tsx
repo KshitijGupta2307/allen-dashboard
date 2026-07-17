@@ -1,3 +1,5 @@
+import { Button } from "./Button";
+
 export function LoadingState() {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-24 text-[var(--text-muted)]">
@@ -10,18 +12,17 @@ export function LoadingState() {
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-24 px-6 text-center max-w-lg mx-auto">
-      <span className="w-10 h-10 rounded-full flex items-center justify-center text-[18px]" style={{ background: "color-mix(in srgb, var(--status-critical) 14%, transparent)", color: "var(--status-critical)" }}>
+      <span
+        className="w-10 h-10 rounded-full flex items-center justify-center text-[18px]"
+        style={{ background: "color-mix(in srgb, var(--status-critical) 14%, transparent)", color: "var(--status-critical-text)" }}
+      >
         !
       </span>
       <p className="text-[14px] font-medium">Could not load the dashboard</p>
       <p className="text-[13px] text-[var(--text-muted)]">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="text-[12px] font-medium border border-[var(--border)] rounded-md px-3 py-1.5 bg-[var(--surface-1)] hover:bg-[var(--page)] mt-1"
-      >
+      <Button size="md" onClick={onRetry} className="mt-1">
         Try again
-      </button>
+      </Button>
     </div>
   );
 }

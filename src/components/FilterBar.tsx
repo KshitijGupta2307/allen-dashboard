@@ -1,6 +1,7 @@
 import type { Filters, Status } from "../lib/types";
 import { MultiSelect } from "./MultiSelect";
 import { DateRangePicker } from "./DateRangePicker";
+import { Button } from "./Button";
 
 interface FilterBarProps {
   filters: Filters;
@@ -42,20 +43,6 @@ export function FilterBar({ filters, onChange, platforms, contentTypes, maxDate,
     );
   };
 
-  const presetBtn = (label: string, n: number | null) => (
-    <button
-      type="button"
-      onClick={() => applyPreset(n)}
-      className={`text-[12px] rounded-md px-2.5 py-1.5 border transition-colors duration-150 ${
-        isPresetActive(n)
-          ? "border-[var(--series-1)] bg-[var(--series-1)] text-white"
-          : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)] hover:bg-[var(--page)]"
-      }`}
-    >
-      {label}
-    </button>
-  );
-
   const toggleStatus = (s: Status) => {
     if (filters.statuses.includes(s)) onChange({ ...filters, statuses: filters.statuses.filter((x) => x !== s) });
     else onChange({ ...filters, statuses: [...filters.statuses, s] });
@@ -70,10 +57,18 @@ export function FilterBar({ filters, onChange, platforms, contentTypes, maxDate,
       style={{ boxShadow: "var(--shadow-card)" }}
     >
       <div className="flex items-center gap-1.5">
-        {presetBtn("All time", null)}
-        {presetBtn("30d", 30)}
-        {presetBtn("90d", 90)}
-        {presetBtn("6m", 182)}
+        <Button active={isPresetActive(null)} onClick={() => applyPreset(null)}>
+          All time
+        </Button>
+        <Button active={isPresetActive(30)} onClick={() => applyPreset(30)}>
+          30d
+        </Button>
+        <Button active={isPresetActive(90)} onClick={() => applyPreset(90)}>
+          90d
+        </Button>
+        <Button active={isPresetActive(182)} onClick={() => applyPreset(182)}>
+          6m
+        </Button>
       </div>
 
       <div className="w-px h-5 bg-[var(--border)] mx-1" />
@@ -97,31 +92,21 @@ export function FilterBar({ filters, onChange, platforms, contentTypes, maxDate,
 
       <div className="flex items-center gap-1">
         {STATUS_OPTIONS.map((s) => (
-          <button
-            key={s.value}
-            type="button"
-            onClick={() => toggleStatus(s.value)}
-            className={`text-[12px] rounded-full px-2.5 py-1 border transition-colors duration-150 ${
-              filters.statuses.includes(s.value)
-                ? "border-[var(--series-1)] bg-[var(--series-1)] text-white"
-                : "border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)] hover:bg-[var(--page)]"
-            }`}
-          >
+          <Button key={s.value} pill active={filters.statuses.includes(s.value)} onClick={() => toggleStatus(s.value)}>
             {s.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       <span className="text-[12px] text-[var(--text-muted)] ml-auto tabular">{resultCount.toLocaleString()} records</span>
 
       {hasActiveFilters && (
-        <button
-          type="button"
+        <Button
+          variant="link"
           onClick={() => onChange({ from: null, to: null, platforms: [], contentTypes: [], statuses: [] })}
-          className="text-[12px] text-[var(--series-1)] hover:underline"
         >
           Reset
-        </button>
+        </Button>
       )}
     </div>
   );

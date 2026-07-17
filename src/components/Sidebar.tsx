@@ -1,0 +1,96 @@
+import { useEffect } from "react";
+import type { Route } from "../lib/routes";
+import { CloseIcon, GaugeIcon, RadarIcon } from "./icons";
+
+interface SidebarProps {
+  route: Route;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+const NAV_ITEMS: { route: Route; label: string; href: string; icon: typeof GaugeIcon }[] = [
+  { route: "dashboard", label: "Takedown Ops", href: "#/", icon: GaugeIcon },
+  { route: "scanned-by-axio", label: "Scanned by Axio", href: "#/scanned-by-axio", icon: RadarIcon },
+];
+
+function NavList({ route, onNavigate }: { route: Route; onNavigate: () => void }) {
+  return (
+    <nav className="flex flex-col gap-1 px-3">
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const active = item.route === route;
+        return (
+          <a
+            key={item.route}
+            href={item.href}
+            onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors duration-150 ${
+              active
+                ? "text-[var(--series-1)]"
+                : "text-[var(--text-secondary)] hover:bg-[var(--page)] hover:text-[var(--text-primary)]"
+            }`}
+            style={active ? { background: "color-mix(in srgb, var(--series-1) 10%, transparent)" } : undefined}
+          >
+            <Icon size={18} className="shrink-0" />
+            {item.label}
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
+function Brand() {
+  return (
+    <div className="flex items-center gap-2.5 px-5 py-5">
+      <img src="/axio-logo.png" alt="Axio Principle" className="w-8 h-8 rounded-md object-contain shrink-0" />
+      <span className="text-[14px] font-semibold leading-tight">Axio Principle</span>
+    </div>
+  );
+}
+
+export function Sidebar({ route, mobileOpen, onMobileClose }: SidebarProps) {
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onMobileClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen, onMobileClose]);
+
+  return (
+    <>
+      {/* Persistent desktop sidebar */}
+      <aside className="hidden lg:flex flex-col w-60 shrink-0 h-screen sticky top-0 border-r border-[var(--border)] bg-[var(--surface-1)]">
+        <Brand />
+        <NavList route={route} onNavigate={() => {}} />
+      </aside>
+
+      {/* Mobile / tablet drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-black/30" onClick={onMobileClose} aria-hidden="true" />
+          <aside
+            className="relative flex flex-col w-64 h-full bg-[var(--surface-1)]"
+            style={{ boxShadow: "var(--shadow-card-hover)" }}
+          >
+            <div className="flex items-center justify-between pr-3">
+              <Brand />
+              <button
+                type="button"
+                onClick={onMobileClose}
+                aria-label="Close navigation menu"
+                className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-[var(--page)] transition-colors duration-150 shrink-0"
+              >
+                <CloseIcon size={18} />
+              </button>
+            </div>
+            <NavList route={route} onNavigate={onMobileClose} />
+          </aside>
+        </div>
+      )}
+    </>
+  );
+}

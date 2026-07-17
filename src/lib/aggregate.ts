@@ -156,11 +156,11 @@ export function funnel(data: { reported: boolean | null; removed: boolean | null
 
 export function tatHistogram(data: { tatDays: number | null }[]): Bucket[] {
   const bands: [number, number, string][] = [
-    [0, 3, "0-3d"],
-    [4, 5, "4-5d"],
-    [6, 7, "6-7d"],
-    [8, 14, "8-14d"],
-    [15, Infinity, "15d+"],
+    [0, 0, "0d"],
+    [1, 1, "1d"],
+    [2, 2, "2d"],
+    [3, 3, "3d"],
+    [4, 4, "4d"],
   ];
   const counts = bands.map(([, , label]) => ({ label, count: 0 }));
   for (const s of data) {

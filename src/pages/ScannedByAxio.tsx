@@ -3,19 +3,18 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { fetchProjectWiseSheet, fetchScrappedLinksSheet } from "../lib/sheets";
 import { normalizeProjectWiseRows, normalizeScrappedLinkRows } from "../lib/parse";
 import { useSheetTab } from "../hooks/useSheetTab";
-import { computeSimpleKpis, countBy, funnel, simpleStatus, tatHistogram, trendByWeek } from "../lib/aggregate";
-import { platformColor, contentTypeColor } from "../lib/colors";
+import { computeSimpleKpis, funnel, simpleStatus, tatHistogram, trendByWeek } from "../lib/aggregate";
 import { formatDate, formatInt, formatPct } from "../lib/format";
 import type { ProjectWiseRow, ScrappedLinkRow, Status } from "../lib/types";
-import { Header } from "../components/Header";
+import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
 import { StatusBadge } from "../components/StatusBadge";
 import { MultiSelect } from "../components/MultiSelect";
 import { DateRangePicker } from "../components/DateRangePicker";
+import { Button } from "../components/Button";
 import { RecordTable } from "../components/RecordTable";
 import { TrendChart } from "../components/charts/TrendChart";
 import { FunnelChart } from "../components/charts/FunnelChart";
-import { PieBreakdown } from "../components/charts/PieBreakdown";
 import { TatChart } from "../components/charts/TatChart";
 import { LoadingState, ErrorState } from "../components/StatusStates";
 
@@ -105,10 +104,6 @@ function matchesDateRange(row: { date: Date | null }, from: Date | null, to: Dat
   return true;
 }
 
-const TAB_BTN =
-  "text-[12px] rounded-md px-2.5 py-1.5 border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)] hover:bg-[var(--page)] transition-colors duration-150";
-const TAB_BTN_ACTIVE = "text-[12px] rounded-md px-2.5 py-1.5 border border-[var(--series-1)] bg-[var(--series-1)] text-white transition-colors duration-150";
-
 export function ScannedByAxio() {
   const projectWise = useSheetTab(fetchProjectWiseSheet, normalizeProjectWiseRows);
   const scrappedLinks = useSheetTab(fetchScrappedLinksSheet, normalizeScrappedLinkRows);
@@ -150,16 +145,6 @@ export function ScannedByAxio() {
   const kpis = computeSimpleKpis(activeRows);
   const trend = useMemo(() => trendByWeek(activeRows), [activeRows]);
   const funnelData = useMemo(() => funnel(activeRows), [activeRows]);
-  const byPlatform = useMemo(() => countBy(activeRows, (r) => r.platform, 6), [activeRows]);
-  const byCategory = useMemo(
-    () =>
-      countBy(
-        activeRows,
-        (r) => (tab === "project-wise" ? (r as ProjectWiseRow).category || "Uncategorized" : (r as ScrappedLinkRow).type),
-        6,
-      ),
-    [activeRows, tab],
-  );
   const tatData = useMemo(
     () => (tab === "scrapped-links" ? tatHistogram(filteredScrappedLinks) : []),
     [tab, filteredScrappedLinks],
@@ -171,16 +156,14 @@ export function ScannedByAxio() {
   };
 
   return (
-    <div className="min-h-full flex flex-col">
-      <Header
-        title="Scanned by Axio"
-        subtitle="Project-wise & scrapped link sweeps"
-        route="scanned-by-axio"
-        lastUpdated={active.lastUpdated}
-        loading={active.loading}
-        onRefresh={refresh}
-      />
-
+    <AppShell
+      title="Scanned by Axio"
+      subtitle="Project-wise & scrapped link sweeps"
+      route="scanned-by-axio"
+      lastUpdated={active.lastUpdated}
+      loading={active.loading}
+      onRefresh={refresh}
+    >
       {active.loading && active.data.length === 0 && <LoadingState />}
       {active.error && active.data.length === 0 && <ErrorState message={active.error} onRetry={refresh} />}
 
@@ -191,20 +174,12 @@ export function ScannedByAxio() {
             style={{ boxShadow: "var(--shadow-card)" }}
           >
             <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleTabChange("project-wise")}
-                className={tab === "project-wise" ? TAB_BTN_ACTIVE : TAB_BTN}
-              >
+              <Button active={tab === "project-wise"} onClick={() => handleTabChange("project-wise")}>
                 Project Wise
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange("scrapped-links")}
-                className={tab === "scrapped-links" ? TAB_BTN_ACTIVE : TAB_BTN}
-              >
+              </Button>
+              <Button active={tab === "scrapped-links"} onClick={() => handleTabChange("scrapped-links")}>
                 Scrapped Links
-              </button>
+              </Button>
             </div>
 
             <div className="w-px h-5 bg-[var(--border)] mx-1" />
@@ -248,15 +223,7 @@ export function ScannedByAxio() {
             <FunnelChart data={funnelData} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <PieBreakdown title="By platform" data={byPlatform} colorFor={platformColor} />
-            <PieBreakdown
-              title={tab === "project-wise" ? "By category" : "By type"}
-              data={byCategory}
-              colorFor={contentTypeColor}
-            />
-            {tab === "scrapped-links" && <TatChart data={tatData} />}
-          </div>
+          {tab === "scrapped-links" && <TatChart data={tatData} />}
 
           {tab === "project-wise" ? (
             <RecordTable
@@ -275,6 +242,6 @@ export function ScannedByAxio() {
           )}
         </main>
       )}
-    </div>
+    </AppShell>
   );
 }

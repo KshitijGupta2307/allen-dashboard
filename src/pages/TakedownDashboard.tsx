@@ -1,14 +1,12 @@
 import { useMemo, useState } from "react";
 import { useSubmissions } from "../hooks/useSubmissions";
 import type { Filters } from "../lib/types";
-import { computeKpis, countBy, filterSubmissions, funnel, tatHistogram, trendByWeek } from "../lib/aggregate";
-import { platformColor, contentTypeColor } from "../lib/colors";
+import { computeKpis, filterSubmissions, funnel, tatHistogram, trendByWeek } from "../lib/aggregate";
 import { formatCompact, formatInt, formatPct } from "../lib/format";
-import { Header } from "../components/Header";
+import { AppShell } from "../components/AppShell";
 import { FilterBar } from "../components/FilterBar";
 import { StatTile } from "../components/StatTile";
 import { TrendChart } from "../components/charts/TrendChart";
-import { PieBreakdown } from "../components/charts/PieBreakdown";
 import { FunnelChart } from "../components/charts/FunnelChart";
 import { TatChart } from "../components/charts/TatChart";
 import { DataTable } from "../components/DataTable";
@@ -30,22 +28,18 @@ export function TakedownDashboard() {
   const filtered = useMemo(() => filterSubmissions(data, filters), [data, filters]);
   const kpis = useMemo(() => computeKpis(filtered), [filtered]);
   const trend = useMemo(() => trendByWeek(filtered), [filtered]);
-  const byPlatform = useMemo(() => countBy(filtered, (s) => s.platform, 6), [filtered]);
-  const byType = useMemo(() => countBy(filtered, (s) => s.contentType, 6), [filtered]);
   const funnelData = useMemo(() => funnel(filtered), [filtered]);
   const tatData = useMemo(() => tatHistogram(filtered), [filtered]);
 
   return (
-    <div className="min-h-full flex flex-col">
-      <Header
-        title="Takedown Ops"
-        subtitle="Submission tracker"
-        route="dashboard"
-        lastUpdated={lastUpdated}
-        loading={loading}
-        onRefresh={refresh}
-      />
-
+    <AppShell
+      title="Takedown Ops"
+      subtitle="Submission tracker"
+      route="dashboard"
+      lastUpdated={lastUpdated}
+      loading={loading}
+      onRefresh={refresh}
+    >
       {loading && data.length === 0 && <LoadingState />}
       {error && data.length === 0 && <ErrorState message={error} onRetry={refresh} />}
 
@@ -98,17 +92,13 @@ export function TakedownDashboard() {
                 <FunnelChart data={funnelData} />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <PieBreakdown title="By platform" data={byPlatform} colorFor={platformColor} />
-                <PieBreakdown title="By content type" data={byType} colorFor={contentTypeColor} />
-                <TatChart data={tatData} />
-              </div>
+              <TatChart data={tatData} />
 
               <DataTable data={filtered} />
             </>
           )}
         </main>
       )}
-    </div>
+    </AppShell>
   );
 }

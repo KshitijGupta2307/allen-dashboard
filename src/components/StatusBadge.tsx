@@ -1,5 +1,5 @@
 import type { Status } from "../lib/types";
-import { statusColor } from "../lib/colors";
+import { statusColor, statusTextColor } from "../lib/colors";
 
 const STATUS_LABEL: Record<Status, string> = {
   removed: "Removed",
@@ -12,7 +12,7 @@ export function StatusBadge({ status }: { status: Status }) {
     <span
       className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full"
       style={{
-        color: statusColor(status),
+        color: statusTextColor(status),
         background: `color-mix(in srgb, ${statusColor(status)} 14%, transparent)`,
       }}
     >

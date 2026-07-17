@@ -31,6 +31,15 @@ const STATUS_SLOT: Record<string, string> = {
   "not-reported": "--text-muted",
 };
 
+/** Darker variants used specifically for text sitting on a status color's own tint (badges) — see index.css.
+ * "not-reported" uses --text-secondary rather than --text-muted here: --text-muted on its own 14% tint
+ * measures ~4.0:1, just under the 4.5:1 AA threshold; --text-secondary comfortably clears it. */
+const STATUS_TEXT_SLOT: Record<string, string> = {
+  removed: "--status-good-text",
+  pending: "--status-warning-text",
+  "not-reported": "--text-secondary",
+};
+
 const FALLBACK_ORDER = [
   "--series-1",
   "--series-2",
@@ -62,6 +71,10 @@ export function contentTypeColor(type: string): string {
 
 export function statusColor(status: keyof typeof STATUS_SLOT): string {
   return resolveVar(STATUS_SLOT[status]);
+}
+
+export function statusTextColor(status: keyof typeof STATUS_TEXT_SLOT): string {
+  return resolveVar(STATUS_TEXT_SLOT[status]);
 }
 
 export function seqColor(step: 100 | 250 | 400 | 450 | 500 | 600): string {
