@@ -43,6 +43,12 @@ export function parseIntSafe(raw: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+/** Turnaround time in whole days: removal date minus reporting date. Sheet's own TAT column is manually entered and unreliable. */
+function diffDays(from: Date | null, to: Date | null): number | null {
+  if (!from || !to) return null;
+  return Math.round((to.getTime() - from.getTime()) / 86_400_000);
+}
+
 const KNOWN_CONTENT_TYPES = new Set(["Defamation", "Copyright", "Piracy", "Impersonation"]);
 
 function normalizePlatform(raw: string): string {
@@ -101,6 +107,9 @@ export function normalizeRow(row: string[], id: number): Submission | null {
   // Skip fully-blank trailer rows.
   if (!dateRaw && !link && !cell(row, COL.channelId)) return null;
 
+  const reportingDate = parseDMY(cell(row, COL.reportingDate));
+  const removalDate = parseDMY(cell(row, COL.removalDate));
+
   return {
     id,
     date: parseDMY(dateRaw),
@@ -112,15 +121,15 @@ export function normalizeRow(row: string[], id: number): Submission | null {
     views: parseCount(cell(row, COL.views)),
     likes: parseCount(cell(row, COL.likes)),
     reported: parseBool(cell(row, COL.reported)),
-    reportingDate: parseDMY(cell(row, COL.reportingDate)),
+    reportingDate,
     removed: parseBool(cell(row, COL.removed)),
-    removalDate: parseDMY(cell(row, COL.removalDate)),
+    removalDate,
     remarks: cell(row, COL.remarks),
     subType: cell(row, COL.subType),
     account: cell(row, COL.account),
     noOfLinks: parseIntSafe(cell(row, COL.noOfLinks), 0),
     logoUsed: normalizeLogo(cell(row, COL.logoUsed)),
-    tatDays: parseCount(cell(row, COL.tat)),
+    tatDays: diffDays(reportingDate, removalDate),
   };
 }
 
@@ -224,6 +233,9 @@ export function normalizeScrappedLinkRow(row: string[], id: number): ScrappedLin
   const channelId = cell(row, COL_SCRAPPED_LINKS.channelId);
   if (!dateRaw && !link && !channelId) return null;
 
+  const reportingDate = parseDMY(cell(row, COL_SCRAPPED_LINKS.reportingDate));
+  const removalDate = parseDMY(cell(row, COL_SCRAPPED_LINKS.removalDate));
+
   return {
     id,
     date: parseDMY(dateRaw),
@@ -242,10 +254,10 @@ export function normalizeScrappedLinkRow(row: string[], id: number): ScrappedLin
     autoApproval: parseBool(cell(row, COL_SCRAPPED_LINKS.autoApproval)),
     approval: parseBool(cell(row, COL_SCRAPPED_LINKS.approval)),
     reported: parseBool(cell(row, COL_SCRAPPED_LINKS.reported)),
-    reportingDateRaw: cell(row, COL_SCRAPPED_LINKS.reportingDate),
+    reportingDate,
     removed: parseBool(cell(row, COL_SCRAPPED_LINKS.removed)),
-    removalDateRaw: cell(row, COL_SCRAPPED_LINKS.removalDate),
-    tatDays: parseCount(cell(row, COL_SCRAPPED_LINKS.tat)),
+    removalDate,
+    tatDays: diffDays(reportingDate, removalDate),
     remarks: cell(row, COL_SCRAPPED_LINKS.remarks),
     logoVisible: cell(row, COL_SCRAPPED_LINKS.logoVisible),
   };

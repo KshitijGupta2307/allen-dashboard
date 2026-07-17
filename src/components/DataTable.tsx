@@ -53,11 +53,6 @@ const columns: ColumnDef<Submission>[] = [
       return v === null ? <span className="text-[var(--text-muted)]">—</span> : formatCompact(v);
     },
   },
-  {
-    accessorKey: "tatDays",
-    header: "TAT (d)",
-    cell: (info) => info.getValue<number | null>() ?? <span className="text-[var(--text-muted)]">—</span>,
-  },
 ];
 
 export function DataTable({ data }: { data: Submission[] }) {

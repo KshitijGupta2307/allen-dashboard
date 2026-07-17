@@ -69,9 +69,9 @@ export interface ScrappedLinkRow {
   autoApproval: boolean | null;
   approval: boolean | null;
   reported: boolean | null;
-  reportingDateRaw: string;
+  reportingDate: Date | null;
   removed: boolean | null;
-  removalDateRaw: string;
+  removalDate: Date | null;
   tatDays: number | null;
   remarks: string;
   logoVisible: string;

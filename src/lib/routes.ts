@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
-export type Route = "dashboard" | "scanned-by-axio";
+export type Route = "dashboard" | "scanned-by-axio" | "overall-report";
 
 function parseHash(hash: string): Route {
   if (hash === "#/scanned-by-axio") return "scanned-by-axio";
+  if (hash === "#/overall-report") return "overall-report";
   return "dashboard";
 }
 

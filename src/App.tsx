@@ -1,10 +1,13 @@
 import { useRoute } from "./lib/routes";
 import { TakedownDashboard } from "./pages/TakedownDashboard";
 import { ScannedByAxio } from "./pages/ScannedByAxio";
+import { OverallReport } from "./pages/OverallReport";
 
 function App() {
   const route = useRoute();
-  return route === "scanned-by-axio" ? <ScannedByAxio /> : <TakedownDashboard />;
+  if (route === "scanned-by-axio") return <ScannedByAxio />;
+  if (route === "overall-report") return <OverallReport />;
+  return <TakedownDashboard />;
 }
 
 export default App;

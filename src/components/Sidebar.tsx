@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { Route } from "../lib/routes";
-import { CloseIcon, GaugeIcon, RadarIcon } from "./icons";
+import { CloseIcon, GaugeIcon, RadarIcon, ReportIcon } from "./icons";
 
 interface SidebarProps {
   route: Route;
@@ -11,6 +11,7 @@ interface SidebarProps {
 const NAV_ITEMS: { route: Route; label: string; href: string; icon: typeof GaugeIcon }[] = [
   { route: "dashboard", label: "Takedown Ops", href: "#/", icon: GaugeIcon },
   { route: "scanned-by-axio", label: "Scanned by Axio", href: "#/scanned-by-axio", icon: RadarIcon },
+  { route: "overall-report", label: "Overall Report", href: "#/overall-report", icon: ReportIcon },
 ];
 
 function NavList({ route, onNavigate }: { route: Route; onNavigate: () => void }) {
