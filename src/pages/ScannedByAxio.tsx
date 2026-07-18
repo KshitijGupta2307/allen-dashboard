@@ -3,22 +3,22 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { fetchProjectWiseSheet, fetchScrappedLinksSheet } from "../lib/sheets";
 import { normalizeProjectWiseRows, normalizeScrappedLinkRows } from "../lib/parse";
 import { useSheetTab } from "../hooks/useSheetTab";
-import { computeSimpleKpis, funnel, simpleStatus, tatHistogram, trendByWeek } from "../lib/aggregate";
+import { combineRows, computeSimpleKpis, funnel, simpleStatus, tatHistogram, trendByWeek } from "../lib/aggregate";
 import { formatDate, formatInt, formatPct } from "../lib/format";
-import type { ProjectWiseRow, ScrappedLinkRow, Status } from "../lib/types";
+import type { CombinedRow, ProjectWiseRow, ScrappedLinkRow, Status } from "../lib/types";
 import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
 import { StatusBadge } from "../components/StatusBadge";
 import { MultiSelect } from "../components/MultiSelect";
 import { DateRangePicker } from "../components/DateRangePicker";
-import { Button } from "../components/Button";
+import { TabViewSelect, type TabViewOption } from "../components/TabViewSelect";
 import { RecordTable } from "../components/RecordTable";
 import { TrendChart } from "../components/charts/TrendChart";
 import { FunnelChart } from "../components/charts/FunnelChart";
 import { TatChart } from "../components/charts/TatChart";
 import { LoadingState, ErrorState } from "../components/StatusStates";
 
-type Tab = "project-wise" | "scrapped-links";
+type Tab = "project-wise" | "scrapped-links" | "overall";
 
 function LinkCell({ value }: { value: string }) {
   if (!value) return <span className="text-[var(--text-muted)]">—</span>;
@@ -81,6 +81,55 @@ const scrappedLinksColumns: ColumnDef<ScrappedLinkRow>[] = [
   },
 ];
 
+function SourceBadge({ value }: { value: CombinedRow["source"] }) {
+  const isProjectWise = value === "Project Wise";
+  return (
+    <span
+      className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${
+        isProjectWise
+          ? "bg-[var(--series-1)]/15 text-[var(--series-1)]"
+          : "bg-[var(--series-2)]/15 text-[var(--series-2)]"
+      }`}
+    >
+      {value}
+    </span>
+  );
+}
+
+const overallColumns: ColumnDef<CombinedRow>[] = [
+  {
+    accessorKey: "date",
+    header: "Date",
+    cell: (info) => formatDate(info.getValue<Date | null>()),
+    sortingFn: "datetime",
+  },
+  { accessorKey: "source", header: "Source", cell: (info) => <SourceBadge value={info.getValue<CombinedRow["source"]>()} /> },
+  { accessorKey: "platform", header: "Platform" },
+  { accessorKey: "link", header: "Link", cell: (info) => <LinkCell value={info.getValue<string>()} /> },
+  {
+    accessorKey: "channelId",
+    header: "Channel",
+    cell: (info) => info.getValue<string>() || <span className="text-[var(--text-muted)]">—</span>,
+  },
+  {
+    id: "status",
+    header: "Status",
+    accessorFn: (row) => simpleStatus(row.reported, row.removed),
+    cell: (info) => <StatusBadge status={info.getValue<Status>()} />,
+  },
+  {
+    accessorKey: "tatDays",
+    header: "TAT (d)",
+    cell: (info) => info.getValue<number | null>() ?? <span className="text-[var(--text-muted)]">—</span>,
+  },
+];
+
+const TAB_OPTIONS: TabViewOption<Tab>[] = [
+  { value: "project-wise", label: "Project Wise" },
+  { value: "scrapped-links", label: "Scrapped Links" },
+  { value: "overall", label: "Overall" },
+];
+
 const STATUS_LABELS = ["Removed", "Pending", "Not reported"];
 const LABEL_TO_STATUS: Record<string, Status> = {
   Removed: "removed",
@@ -119,7 +168,24 @@ export function ScannedByAxio() {
     setPlatforms([]);
   };
 
-  const active = tab === "project-wise" ? projectWise : scrappedLinks;
+  const overall = useMemo(() => combineRows(projectWise.data, scrappedLinks.data), [projectWise.data, scrappedLinks.data]);
+
+  const active =
+    tab === "project-wise"
+      ? projectWise
+      : tab === "scrapped-links"
+        ? scrappedLinks
+        : {
+            data: overall,
+            loading: projectWise.loading || scrappedLinks.loading,
+            error: projectWise.error ?? scrappedLinks.error,
+            lastUpdated:
+              projectWise.lastUpdated && scrappedLinks.lastUpdated
+                ? projectWise.lastUpdated > scrappedLinks.lastUpdated
+                  ? projectWise.lastUpdated
+                  : scrappedLinks.lastUpdated
+                : (projectWise.lastUpdated ?? scrappedLinks.lastUpdated),
+          };
 
   const platformOptions = useMemo(
     () => [...new Set(active.data.map((r) => r.platform))].sort(),
@@ -140,14 +206,22 @@ export function ScannedByAxio() {
       ),
     [scrappedLinks.data, statuses, platforms, dateFrom, dateTo],
   );
+  const filteredOverall = useMemo(
+    () =>
+      overall.filter(
+        (r) => matchesStatus(r, statuses) && matchesPlatform(r, platforms) && matchesDateRange(r, dateFrom, dateTo),
+      ),
+    [overall, statuses, platforms, dateFrom, dateTo],
+  );
 
-  const activeRows: (ProjectWiseRow | ScrappedLinkRow)[] = tab === "project-wise" ? filteredProjectWise : filteredScrappedLinks;
+  const activeRows: (ProjectWiseRow | ScrappedLinkRow | CombinedRow)[] =
+    tab === "project-wise" ? filteredProjectWise : tab === "scrapped-links" ? filteredScrappedLinks : filteredOverall;
   const kpis = computeSimpleKpis(activeRows);
   const trend = useMemo(() => trendByWeek(activeRows), [activeRows]);
   const funnelData = useMemo(() => funnel(activeRows), [activeRows]);
   const tatData = useMemo(
-    () => (tab === "scrapped-links" ? tatHistogram(filteredScrappedLinks) : []),
-    [tab, filteredScrappedLinks],
+    () => (tab === "scrapped-links" ? tatHistogram(filteredScrappedLinks) : tab === "overall" ? tatHistogram(filteredOverall) : []),
+    [tab, filteredScrappedLinks, filteredOverall],
   );
 
   const refresh = () => {
@@ -173,14 +247,7 @@ export function ScannedByAxio() {
             className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
             style={{ boxShadow: "var(--shadow-card)" }}
           >
-            <div className="flex items-center gap-1.5">
-              <Button active={tab === "project-wise"} onClick={() => handleTabChange("project-wise")}>
-                Project Wise
-              </Button>
-              <Button active={tab === "scrapped-links"} onClick={() => handleTabChange("scrapped-links")}>
-                Scrapped Links
-              </Button>
-            </div>
+            <TabViewSelect label="Criteria" options={TAB_OPTIONS} value={tab} onChange={handleTabChange} />
 
             <div className="w-px h-5 bg-[var(--border)] mx-1" />
 
@@ -221,7 +288,7 @@ export function ScannedByAxio() {
             <FunnelChart data={funnelData} />
           </div>
 
-          {tab === "scrapped-links" && <TatChart data={tatData} />}
+          {(tab === "scrapped-links" || tab === "overall") && <TatChart data={tatData} />}
 
           {tab === "project-wise" ? (
             <RecordTable
@@ -230,11 +297,18 @@ export function ScannedByAxio() {
               title="Project wise log"
               initialSorting={[{ id: "date", desc: true }]}
             />
-          ) : (
+          ) : tab === "scrapped-links" ? (
             <RecordTable
               data={filteredScrappedLinks}
               columns={scrappedLinksColumns}
               title="Scrapped links log"
+              initialSorting={[{ id: "date", desc: true }]}
+            />
+          ) : (
+            <RecordTable
+              data={filteredOverall}
+              columns={overallColumns}
+              title="Overall log"
               initialSorting={[{ id: "date", desc: true }]}
             />
           )}

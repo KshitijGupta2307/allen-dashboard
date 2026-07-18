@@ -1,4 +1,12 @@
-import type { Submission } from "./types";
+/** Minimal shape reportAggregate needs — satisfied by Submission and by CombinedRow (Scanned by Axio). */
+export interface ReportableRow {
+  date: Date | null;
+  platform: string;
+  reported: boolean | null;
+  removed: boolean | null;
+  tatDays: number | null;
+  noOfLinks?: number;
+}
 
 export interface MonthOption {
   year: number;
@@ -20,7 +28,7 @@ function ordinal(n: number): string {
 }
 
 /** Distinct year/month pairs present in the data, most recent first. */
-export function availableMonths(data: Submission[]): MonthOption[] {
+export function availableMonths<T extends ReportableRow>(data: T[]): MonthOption[] {
   const seen = new Map<string, MonthOption>();
   for (const s of data) {
     if (!s.date) continue;
@@ -34,12 +42,12 @@ export function availableMonths(data: Submission[]): MonthOption[] {
   return [...seen.values()].sort((a, b) => b.year - a.year || b.month - a.month);
 }
 
-export function filterByMonth(data: Submission[], year: number, month: number): Submission[] {
+export function filterByMonth<T extends ReportableRow>(data: T[], year: number, month: number): T[] {
   return data.filter((s) => s.date && s.date.getFullYear() === year && s.date.getMonth() === month);
 }
 
 /** Top platforms by volume, remainder folded into "Other" so wide platform mixes stay readable. */
-export function platformColumns(rows: Submission[], max = 5): string[] {
+export function platformColumns<T extends ReportableRow>(rows: T[], max = 5): string[] {
   const counts = new Map<string, number>();
   for (const s of rows) counts.set(s.platform, (counts.get(s.platform) ?? 0) + 1);
   const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([p]) => p);
@@ -60,8 +68,8 @@ export interface RowStats {
   removalPct: number;
 }
 
-function computeRowStats(rows: Submission[]): RowStats {
-  const linksSent = rows.reduce((a, s) => a + s.noOfLinks, 0);
+function computeRowStats<T extends ReportableRow>(rows: T[]): RowStats {
+  const linksSent = rows.reduce((a, s) => a + (s.noOfLinks ?? 1), 0);
   const linksApproved = rows.filter((s) => s.reported).length;
   const linksRemoved = rows.filter((s) => s.removed).length;
   const pending = rows.filter((s) => s.reported && !s.removed).length;
@@ -80,7 +88,7 @@ export interface WeekRow extends RowStats {
 }
 
 /** Fixed 7-day blocks from the 1st of the month (not calendar weeks) — matches "Week 1, 1st-7th" style reporting. */
-export function weeklyByPlatform(rows: Submission[], year: number, month: number, columns: string[]): WeekRow[] {
+export function weeklyByPlatform<T extends ReportableRow>(rows: T[], year: number, month: number, columns: string[]): WeekRow[] {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const monthAbbr = new Date(year, month, 1).toLocaleDateString(undefined, { month: "short" });
   const weeks: WeekRow[] = [];
@@ -114,7 +122,7 @@ function matchesTatBucket(days: number, bucket: TatBucket): boolean {
   return days >= 4;
 }
 
-function tatCount(rows: Submission[], bucket: TatBucket): number {
+function tatCount<T extends ReportableRow>(rows: T[], bucket: TatBucket): number {
   return rows.filter((s) => s.removed && s.tatDays !== null && matchesTatBucket(s.tatDays, bucket)).length;
 }
 
@@ -123,14 +131,14 @@ export interface PlatformRow extends RowStats {
   tatCount: number;
 }
 
-export function platformBreakdown(rows: Submission[], columns: string[], bucket: TatBucket): PlatformRow[] {
+export function platformBreakdown<T extends ReportableRow>(rows: T[], columns: string[], bucket: TatBucket): PlatformRow[] {
   return columns.map((platform) => {
     const platRows = rows.filter((s) => bucketPlatform(s.platform, columns) === platform);
     return { platform, tatCount: tatCount(platRows, bucket), ...computeRowStats(platRows) };
   });
 }
 
-export function totalRow(rows: Submission[], bucket: TatBucket): RowStats & { tatCount: number } {
+export function totalRow<T extends ReportableRow>(rows: T[], bucket: TatBucket): RowStats & { tatCount: number } {
   return { tatCount: tatCount(rows, bucket), ...computeRowStats(rows) };
 }
 
@@ -140,7 +148,7 @@ export interface DayRow extends RowStats {
 }
 
 /** Only days with at least one record are included, so a sparse month doesn't pad out the list with zero rows. */
-export function dailyBreakdown(rows: Submission[], year: number, month: number): DayRow[] {
+export function dailyBreakdown<T extends ReportableRow>(rows: T[], year: number, month: number): DayRow[] {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const out: DayRow[] = [];
   for (let day = 1; day <= daysInMonth; day++) {

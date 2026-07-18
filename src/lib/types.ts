@@ -51,6 +51,25 @@ export interface ProjectWiseRow {
   account: string;
 }
 
+export type CombinedSource = "Project Wise" | "Scrapped Links";
+
+export interface CombinedRow {
+  id: string;
+  source: CombinedSource;
+  date: Date | null;
+  dateRaw: string;
+  platform: string;
+  link: string;
+  channelId: string;
+  views: number | null;
+  reported: boolean | null;
+  reportingDate: Date | null;
+  removed: boolean | null;
+  removalDate: Date | null;
+  tatDays: number | null;
+  remarks: string;
+}
+
 export interface ScrappedLinkRow {
   id: number;
   date: Date | null;

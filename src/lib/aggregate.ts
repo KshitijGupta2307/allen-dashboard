@@ -1,4 +1,4 @@
-import type { Filters, Status, Submission } from "./types";
+import type { CombinedRow, Filters, ProjectWiseRow, ScrappedLinkRow, Status, Submission } from "./types";
 
 export function simpleStatus(reported: boolean | null, removed: boolean | null): Status {
   if (removed) return "removed";
@@ -82,6 +82,42 @@ export function computeSimpleKpis(data: { reported: boolean | null; removed: boo
     removedPct: reported ? removed / reported : 0,
     pending,
   };
+}
+
+export function combineRows(projectWise: ProjectWiseRow[], scrappedLinks: ScrappedLinkRow[]): CombinedRow[] {
+  const fromProjectWise: CombinedRow[] = projectWise.map((r) => ({
+    id: `pw-${r.id}`,
+    source: "Project Wise",
+    date: r.date,
+    dateRaw: r.dateRaw,
+    platform: r.platform,
+    link: r.link,
+    channelId: r.channelId,
+    views: r.views,
+    reported: r.reported,
+    reportingDate: r.reportingDate,
+    removed: r.removed,
+    removalDate: r.removalDate,
+    tatDays: null,
+    remarks: "",
+  }));
+  const fromScrappedLinks: CombinedRow[] = scrappedLinks.map((r) => ({
+    id: `sl-${r.id}`,
+    source: "Scrapped Links",
+    date: r.date,
+    dateRaw: r.dateRaw,
+    platform: r.platform,
+    link: r.link,
+    channelId: r.channelId,
+    views: r.views,
+    reported: r.reported,
+    reportingDate: r.reportingDate,
+    removed: r.removed,
+    removalDate: r.removalDate,
+    tatDays: r.tatDays,
+    remarks: r.remarks,
+  }));
+  return [...fromProjectWise, ...fromScrappedLinks];
 }
 
 export interface Bucket {

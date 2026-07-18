@@ -1,8 +1,13 @@
 import { useMemo, useState } from "react";
 import { useSubmissions } from "../hooks/useSubmissions";
+import { useSheetTab } from "../hooks/useSheetTab";
+import { fetchProjectWiseSheet, fetchScrappedLinksSheet } from "../lib/sheets";
+import { normalizeProjectWiseRows, normalizeScrappedLinkRows } from "../lib/parse";
+import { combineRows } from "../lib/aggregate";
 import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
 import { Select } from "../components/Select";
+import { TabViewSelect, type TabViewOption } from "../components/TabViewSelect";
 import { WeeklyPlatformTable } from "../components/report/WeeklyPlatformTable";
 import { PlatformBreakdownTable } from "../components/report/PlatformBreakdownTable";
 import { DailyBreakdownTable } from "../components/report/DailyBreakdownTable";
@@ -16,6 +21,7 @@ import {
   platformBreakdown,
   totalRow,
   dailyBreakdown,
+  type ReportableRow,
   type TatBucket,
 } from "../lib/reportAggregate";
 
@@ -23,11 +29,68 @@ function monthKeyOf(year: number, month: number): string {
   return `${year}-${month}`;
 }
 
+type Source = "allen-submission" | "scanned-by-axio" | "overall";
+
+const SOURCE_OPTIONS: TabViewOption<Source>[] = [
+  { value: "allen-submission", label: "Allen Submission" },
+  { value: "scanned-by-axio", label: "Scanned by Axio" },
+  { value: "overall", label: "Overall" },
+];
+
+function maxDate(...dates: (Date | null)[]): Date | null {
+  return dates.reduce<Date | null>((max, d) => (d && (!max || d > max) ? d : max), null);
+}
+
 export function OverallReport() {
-  const { data, loading, error, lastUpdated, refresh } = useSubmissions();
-  const months = useMemo(() => availableMonths(data), [data]);
+  const submissions = useSubmissions();
+  const projectWise = useSheetTab(fetchProjectWiseSheet, normalizeProjectWiseRows);
+  const scrappedLinks = useSheetTab(fetchScrappedLinksSheet, normalizeScrappedLinkRows);
+  const axioCombined = useMemo(
+    () => combineRows(projectWise.data, scrappedLinks.data),
+    [projectWise.data, scrappedLinks.data],
+  );
+
+  const [source, setSource] = useState<Source>("allen-submission");
   const [monthKey, setMonthKey] = useState<string | null>(null);
   const [tatBucket, setTatBucket] = useState<TatBucket>("1");
+
+  const handleSourceChange = (next: Source) => {
+    setSource(next);
+    setMonthKey(null);
+  };
+
+  const overallSource = useMemo(
+    () => [...submissions.data, ...axioCombined] as ReportableRow[],
+    [submissions.data, axioCombined],
+  );
+
+  const data: ReportableRow[] =
+    source === "allen-submission" ? submissions.data : source === "scanned-by-axio" ? axioCombined : overallSource;
+  const loading =
+    source === "allen-submission"
+      ? submissions.loading
+      : source === "scanned-by-axio"
+        ? projectWise.loading || scrappedLinks.loading
+        : submissions.loading || projectWise.loading || scrappedLinks.loading;
+  const error =
+    source === "allen-submission"
+      ? submissions.error
+      : source === "scanned-by-axio"
+        ? (projectWise.error ?? scrappedLinks.error)
+        : (submissions.error ?? projectWise.error ?? scrappedLinks.error);
+  const lastUpdated =
+    source === "allen-submission"
+      ? submissions.lastUpdated
+      : source === "scanned-by-axio"
+        ? maxDate(projectWise.lastUpdated, scrappedLinks.lastUpdated)
+        : maxDate(submissions.lastUpdated, projectWise.lastUpdated, scrappedLinks.lastUpdated);
+  const refresh = () => {
+    submissions.refresh();
+    projectWise.refresh();
+    scrappedLinks.refresh();
+  };
+
+  const months = useMemo(() => availableMonths(data), [data]);
 
   const selected = useMemo(() => {
     const found = monthKey ? months.find((o) => monthKeyOf(o.year, o.month) === monthKey) : null;
@@ -65,6 +128,8 @@ export function OverallReport() {
       {(data.length > 0 || (!loading && !error)) && (
         <main className="flex-1 flex flex-col gap-4 px-6 py-4 max-w-[1400px] w-full mx-auto">
           {error && <p className="text-[12px] text-[var(--status-critical)]">Last refresh failed: {error}</p>}
+
+          <TabViewSelect label="Source" options={SOURCE_OPTIONS} value={source} onChange={handleSourceChange} />
 
           {!selected ? (
             <EmptyState />
