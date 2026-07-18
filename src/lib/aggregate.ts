@@ -52,7 +52,7 @@ export function computeKpis(data: Submission[]): Kpis {
     reported,
     reportedPct: total ? reported / total : 0,
     removed,
-    removedPct: total ? removed / total : 0,
+    removedPct: reported ? removed / reported : 0,
     pending,
     avgTatDays,
     totalLinksActioned,
@@ -79,7 +79,7 @@ export function computeSimpleKpis(data: { reported: boolean | null; removed: boo
     reported,
     reportedPct: total ? reported / total : 0,
     removed,
-    removedPct: total ? removed / total : 0,
+    removedPct: reported ? removed / reported : 0,
     pending,
   };
 }

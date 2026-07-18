@@ -9,7 +9,7 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { route: Route; label: string; href: string; icon: typeof GaugeIcon }[] = [
-  { route: "dashboard", label: "Takedown Ops", href: "#/", icon: GaugeIcon },
+  { route: "dashboard", label: "Allen Submission", href: "#/", icon: GaugeIcon },
   { route: "scanned-by-axio", label: "Scanned by Axio", href: "#/scanned-by-axio", icon: RadarIcon },
   { route: "overall-report", label: "Overall Report", href: "#/overall-report", icon: ReportIcon },
 ];

@@ -23,24 +23,30 @@ function fromInputValue(v: string): Date | null {
 
 export function DateRangePicker({ from, to, onChange }: DateRangePickerProps) {
   return (
-    <div className="flex items-center gap-1.5">
-      <CalendarIcon size={14} className="text-[var(--text-muted)] shrink-0" />
-      <span className="text-[12px] text-[var(--text-muted)]">Custom range:</span>
-      <input
-        type="date"
-        aria-label="Custom range start date"
-        value={toInputValue(from)}
-        onChange={(e) => onChange(fromInputValue(e.target.value), to)}
-        className="text-[12px] border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface-1)] hover:border-[var(--border-strong)] transition-colors duration-150"
-      />
-      <span className="text-[var(--text-muted)]">–</span>
-      <input
-        type="date"
-        aria-label="Custom range end date"
-        value={toInputValue(to)}
-        onChange={(e) => onChange(from, fromInputValue(e.target.value))}
-        className="text-[12px] border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface-1)] hover:border-[var(--border-strong)] transition-colors duration-150"
-      />
+    <div className="flex items-start gap-1.5">
+      <CalendarIcon size={14} className="text-[var(--text-muted)] shrink-0 mt-1.5" />
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[12px] text-[var(--text-muted)] w-9">From:</span>
+          <input
+            type="date"
+            aria-label="Custom range start date"
+            value={toInputValue(from)}
+            onChange={(e) => onChange(fromInputValue(e.target.value), to)}
+            className="text-[12px] border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface-1)] hover:border-[var(--border-strong)] transition-colors duration-150"
+          />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[12px] text-[var(--text-muted)] w-9">Till:</span>
+          <input
+            type="date"
+            aria-label="Custom range end date"
+            value={toInputValue(to)}
+            onChange={(e) => onChange(from, fromInputValue(e.target.value))}
+            className="text-[12px] border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface-1)] hover:border-[var(--border-strong)] transition-colors duration-150"
+          />
+        </div>
+      </div>
       {(from || to) && (
         <Button variant="link" onClick={() => onChange(null, null)}>
           Clear

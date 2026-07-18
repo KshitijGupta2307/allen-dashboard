@@ -2,6 +2,15 @@ import type { Filters, Status } from "../lib/types";
 import { MultiSelect } from "./MultiSelect";
 import { DateRangePicker } from "./DateRangePicker";
 import { Button } from "./Button";
+import { TimelineSelect, type TimelineOption } from "./TimelineSelect";
+import { StatusSelect } from "./StatusSelect";
+
+const TIMELINE_OPTIONS: TimelineOption[] = [
+  { value: null, label: "All time" },
+  { value: 30, label: "30d" },
+  { value: 90, label: "90d" },
+  { value: 182, label: "6m" },
+];
 
 interface FilterBarProps {
   filters: Filters;
@@ -43,11 +52,6 @@ export function FilterBar({ filters, onChange, platforms, contentTypes, maxDate,
     );
   };
 
-  const toggleStatus = (s: Status) => {
-    if (filters.statuses.includes(s)) onChange({ ...filters, statuses: filters.statuses.filter((x) => x !== s) });
-    else onChange({ ...filters, statuses: [...filters.statuses, s] });
-  };
-
   const hasActiveFilters =
     filters.from || filters.to || filters.platforms.length || filters.contentTypes.length || filters.statuses.length;
 
@@ -56,20 +60,7 @@ export function FilterBar({ filters, onChange, platforms, contentTypes, maxDate,
       className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
-      <div className="flex items-center gap-1.5">
-        <Button active={isPresetActive(null)} onClick={() => applyPreset(null)}>
-          All time
-        </Button>
-        <Button active={isPresetActive(30)} onClick={() => applyPreset(30)}>
-          30d
-        </Button>
-        <Button active={isPresetActive(90)} onClick={() => applyPreset(90)}>
-          90d
-        </Button>
-        <Button active={isPresetActive(182)} onClick={() => applyPreset(182)}>
-          6m
-        </Button>
-      </div>
+      <TimelineSelect options={TIMELINE_OPTIONS} isActive={isPresetActive} onSelect={applyPreset} />
 
       <div className="w-px h-5 bg-[var(--border)] mx-1" />
 
@@ -90,13 +81,11 @@ export function FilterBar({ filters, onChange, platforms, contentTypes, maxDate,
         onChange={(v) => onChange({ ...filters, contentTypes: v })}
       />
 
-      <div className="flex items-center gap-1">
-        {STATUS_OPTIONS.map((s) => (
-          <Button key={s.value} pill active={filters.statuses.includes(s.value)} onClick={() => toggleStatus(s.value)}>
-            {s.label}
-          </Button>
-        ))}
-      </div>
+      <StatusSelect
+        options={STATUS_OPTIONS}
+        selected={filters.statuses}
+        onChange={(v) => onChange({ ...filters, statuses: v })}
+      />
 
       <span className="text-[12px] text-[var(--text-muted)] ml-auto tabular">{resultCount.toLocaleString()} records</span>
 

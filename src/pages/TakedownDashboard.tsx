@@ -33,7 +33,7 @@ export function TakedownDashboard() {
 
   return (
     <AppShell
-      title="Takedown Ops"
+      title="Allen Submission"
       subtitle="Submission tracker"
       route="dashboard"
       lastUpdated={lastUpdated}
@@ -63,18 +63,15 @@ export function TakedownDashboard() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 <StatTile
                   label="Total submissions"
-                  value={formatInt(kpis.totalNoOfLinks)}
-                  sub={`${formatInt(kpis.total)} records`}
+                  value={formatInt(kpis.total)}
                 />
                 <StatTile
                   label="Reported"
                   value={formatPct(kpis.reportedPct)}
-                  sub={`${formatInt(kpis.reported)} of ${formatInt(kpis.total)}`}
                 />
                 <StatTile
                   label="Removed"
                   value={formatPct(kpis.removedPct)}
-                  sub={`${formatInt(kpis.removed)} of ${formatInt(kpis.total)}`}
                   accent="good"
                 />
                 <StatTile

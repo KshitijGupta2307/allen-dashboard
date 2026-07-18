@@ -101,11 +101,20 @@ const COL = {
 
 const cell = (row: string[], idx: number) => (row[idx] ?? "").trim();
 
+/** Trailer rows left over from checkbox formatting applied past the real data:
+ * every cell is empty except Reported/Removed, which default to FALSE. */
+function isBlankTrailerRow(row: string[]): boolean {
+  return row.every((v) => {
+    const s = (v ?? "").trim();
+    return !s || s.toUpperCase() === "FALSE";
+  });
+}
+
 export function normalizeRow(row: string[], id: number): Submission | null {
+  if (isBlankTrailerRow(row)) return null;
+
   const dateRaw = cell(row, COL.date);
   const link = cell(row, COL.link);
-  // Skip fully-blank trailer rows.
-  if (!dateRaw && !link && !cell(row, COL.channelId)) return null;
 
   const reportingDate = parseDMY(cell(row, COL.reportingDate));
   const removalDate = parseDMY(cell(row, COL.removalDate));

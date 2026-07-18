@@ -1,4 +1,4 @@
-# Takedown Ops — Brand Protection Dashboard
+# Allen Submission — Brand Protection Dashboard
 
 A live dashboard over the **Submission** tab of the [tracking sheet](https://docs.google.com/spreadsheets/d/1YqWI2-8jsBaYPSmQp_ewxH2RwYDJHnC_S5lygLOuLe4/edit): trend of flagged content, platform/content-type breakdowns, takedown funnel, turnaround time, top offending accounts, and a searchable/sortable record log. Built with React + Vite + TypeScript + Recharts, pulling data straight from the Google Sheets API on every page load (auto-refreshes every 5 minutes; there's also a manual Refresh button).
 
@@ -32,7 +32,7 @@ VITE_GOOGLE_SHEETS_API_KEY=your-key-here
 
 Use the hamburger menu (top-left, next to the logo) to switch pages:
 
-- **Takedown Ops** (`#/`) — the Submission-tab dashboard described above.
+- **Allen Submission** (`#/`) — the Submission-tab dashboard described above.
 - **Scanned by Axio** (`#/scanned-by-axio`) — record logs from the "Project Wise" and "Scrapped Links" tabs, with a tab switch, free-text search, and the same reported/removed KPIs.
 
 Routing is hash-based (`#/...`), so it works on any static host with no server rewrite rules needed.

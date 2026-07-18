@@ -201,12 +201,10 @@ export function ScannedByAxio() {
             <StatTile
               label="Reported"
               value={formatPct(kpis.reportedPct)}
-              sub={`${formatInt(kpis.reported)} of ${formatInt(kpis.total)}`}
             />
             <StatTile
               label="Removed"
               value={formatPct(kpis.removedPct)}
-              sub={`${formatInt(kpis.removed)} of ${formatInt(kpis.total)}`}
               accent="good"
             />
             <StatTile
