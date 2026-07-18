@@ -10,26 +10,16 @@ import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
 import { StatusBadge } from "../components/StatusBadge";
 import { MultiSelect } from "../components/MultiSelect";
-import { DateRangePicker } from "../components/DateRangePicker";
+import { TimelineDateFilter } from "../components/TimelineDateFilter";
 import { Button } from "../components/Button";
 import { RecordTable } from "../components/RecordTable";
+import { LinkCell } from "../components/LinkCell";
 import { TrendChart } from "../components/charts/TrendChart";
 import { FunnelChart } from "../components/charts/FunnelChart";
 import { TatChart } from "../components/charts/TatChart";
 import { LoadingState, ErrorState } from "../components/StatusStates";
 
 type Tab = "project-wise" | "scrapped-links";
-
-function LinkCell({ value }: { value: string }) {
-  if (!value) return <span className="text-[var(--text-muted)]">—</span>;
-  return (
-    <span className="block max-w-[260px] truncate" title={value}>
-      <a href={value} target="_blank" rel="noreferrer" className="text-[var(--series-1)] hover:underline">
-        {value}
-      </a>
-    </span>
-  );
-}
 
 const projectWiseColumns: ColumnDef<ProjectWiseRow>[] = [
   {
@@ -72,6 +62,7 @@ const scrappedLinksColumns: ColumnDef<ScrappedLinkRow>[] = [
   {
     accessorKey: "tatDays",
     header: "TAT (d)",
+    meta: { align: "right" },
     cell: (info) => info.getValue<number | null>() ?? <span className="text-[var(--text-muted)]">—</span>,
   },
   {
@@ -121,6 +112,11 @@ export function ScannedByAxio() {
 
   const active = tab === "project-wise" ? projectWise : scrappedLinks;
 
+  const maxDate = useMemo(
+    () => active.data.reduce<Date | null>((max, r) => (r.date && (!max || r.date > max) ? r.date : max), null),
+    [active.data],
+  );
+
   const platformOptions = useMemo(
     () => [...new Set(active.data.map((r) => r.platform))].sort(),
     [active.data],
@@ -143,6 +139,7 @@ export function ScannedByAxio() {
 
   const activeRows: (ProjectWiseRow | ScrappedLinkRow)[] = tab === "project-wise" ? filteredProjectWise : filteredScrappedLinks;
   const kpis = computeSimpleKpis(activeRows);
+  const totalScannedByAxio = filteredProjectWise.length + filteredScrappedLinks.length;
   const trend = useMemo(() => trendByWeek(activeRows), [activeRows]);
   const funnelData = useMemo(() => funnel(activeRows), [activeRows]);
   const tatData = useMemo(
@@ -184,7 +181,15 @@ export function ScannedByAxio() {
 
             <div className="w-px h-5 bg-[var(--border)] mx-1" />
 
-            <DateRangePicker from={dateFrom} to={dateTo} onChange={(from, to) => { setDateFrom(from); setDateTo(to); }} />
+            <TimelineDateFilter
+              from={dateFrom}
+              to={dateTo}
+              maxDate={maxDate}
+              onChange={(from, to) => {
+                setDateFrom(from);
+                setDateTo(to);
+              }}
+            />
 
             <div className="ml-auto flex items-center gap-2">
               <MultiSelect label="Platform" options={platformOptions} selected={platforms} onChange={setPlatforms} />
@@ -196,7 +201,8 @@ export function ScannedByAxio() {
             <p className="text-[12px] text-[var(--status-critical)]">Last refresh failed: {active.error}</p>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <StatTile label="Total scanned by Axio" value={formatInt(totalScannedByAxio)} />
             <StatTile label="Total records" value={formatInt(kpis.total)} />
             <StatTile
               label="Reported"

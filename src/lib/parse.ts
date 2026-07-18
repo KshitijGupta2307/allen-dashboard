@@ -115,6 +115,10 @@ export function normalizeRow(row: string[], id: number): Submission | null {
 
   const dateRaw = cell(row, COL.date);
   const link = cell(row, COL.link);
+  const channelId = cell(row, COL.channelId);
+  /** Incomplete manual entries: no date, link, or channel to identify what was submitted —
+   * same completeness guard as the Project Wise / Scrapped Links normalizers. */
+  if (!dateRaw && !link && !channelId) return null;
 
   const reportingDate = parseDMY(cell(row, COL.reportingDate));
   const removalDate = parseDMY(cell(row, COL.removalDate));
@@ -126,7 +130,7 @@ export function normalizeRow(row: string[], id: number): Submission | null {
     platform: normalizePlatform(cell(row, COL.platform)),
     contentType: normalizeContentType(cell(row, COL.contentType)),
     link,
-    channelId: cell(row, COL.channelId),
+    channelId,
     views: parseCount(cell(row, COL.views)),
     likes: parseCount(cell(row, COL.likes)),
     reported: parseBool(cell(row, COL.reported)),

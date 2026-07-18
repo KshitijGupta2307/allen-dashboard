@@ -10,7 +10,7 @@ const PLATFORM_SLOT: Record<string, string> = {
   Twitter: "--series-3",
   Reddit: "--series-8",
   Telegram: "--series-2",
-  LinkedIn: "--series-1",
+  LinkedIn: "--series-7",
   Weblink: "--series-4",
   Unknown: "--text-muted",
   Other: "--text-muted",

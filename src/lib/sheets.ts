@@ -1,10 +1,10 @@
 const API_KEY = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY as string | undefined;
 const SHEET_ID =
   (import.meta.env.VITE_GOOGLE_SHEET_ID as string | undefined) ||
-  "1YqWI2-8jsBaYPSmQp_ewxH2RwYDJHnC_S5lygLOuLe4";
-const SUBMISSION_GID = Number(import.meta.env.VITE_SHEET_GID ?? 0);
-const PROJECT_WISE_GID = Number(import.meta.env.VITE_PROJECT_WISE_GID ?? 644218909);
-const SCRAPPED_LINKS_GID = Number(import.meta.env.VITE_SCRAPPED_LINKS_GID ?? 1001789417);
+  "1tbrurGWOO4RXdwvuMCgJ3Bt_BTm-Fcn2U-U-Qca4eJ8";
+const SUBMISSION_GID = Number(import.meta.env.VITE_SHEET_GID ?? 325209517);
+const PROJECT_WISE_GID = Number(import.meta.env.VITE_PROJECT_WISE_GID ?? 756003287);
+const SCRAPPED_LINKS_GID = Number(import.meta.env.VITE_SCRAPPED_LINKS_GID ?? 2053982824);
 
 export class SheetsConfigError extends Error {}
 export class SheetsFetchError extends Error {

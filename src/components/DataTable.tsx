@@ -4,6 +4,7 @@ import { statusOf } from "../lib/aggregate";
 import { formatCompact, formatDate } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
 import { RecordTable } from "./RecordTable";
+import { LinkCell } from "./LinkCell";
 
 const columns: ColumnDef<Submission>[] = [
   {
@@ -17,22 +18,7 @@ const columns: ColumnDef<Submission>[] = [
   {
     accessorKey: "link",
     header: "Link",
-    cell: (info) => {
-      const v = info.getValue<string>();
-      if (!v) return <span className="text-[var(--text-muted)]">—</span>;
-      const isUrl = /^https?:\/\//i.test(v);
-      return (
-        <span className="block max-w-[260px] truncate" title={v}>
-          {isUrl ? (
-            <a href={v} target="_blank" rel="noreferrer" className="text-[var(--series-1)] hover:underline">
-              {v}
-            </a>
-          ) : (
-            v
-          )}
-        </span>
-      );
-    },
+    cell: (info) => <LinkCell value={info.getValue<string>()} />,
   },
   {
     accessorKey: "channelId",
@@ -48,6 +34,7 @@ const columns: ColumnDef<Submission>[] = [
   {
     accessorKey: "views",
     header: "Views",
+    meta: { align: "right" },
     cell: (info) => {
       const v = info.getValue<number | null>();
       return v === null ? <span className="text-[var(--text-muted)]">—</span> : formatCompact(v);

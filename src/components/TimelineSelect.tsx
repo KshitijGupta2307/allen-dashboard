@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon } from "./icons";
 
 export interface TimelineOption {
-  value: number | null;
+  value: number | null | "custom";
   label: string;
 }
 
 interface TimelineSelectProps {
   options: TimelineOption[];
-  isActive: (value: number | null) => boolean;
-  onSelect: (value: number | null) => void;
+  isActive: (value: number | null | "custom") => boolean;
+  onSelect: (value: number | null | "custom") => void;
 }
 
 export function TimelineSelect({ options, isActive, onSelect }: TimelineSelectProps) {

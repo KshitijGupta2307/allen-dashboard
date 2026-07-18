@@ -8,6 +8,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData, TValue> {
+    /** Right-aligns header + cells — use for numeric columns (Views, TAT, counts). */
+    align?: "right";
+  }
+}
+
 interface RecordTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
@@ -75,7 +83,9 @@ export function RecordTable<T>({
                 {hg.headers.map((h) => (
                   <th
                     key={h.id}
-                    className="text-left font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] border-b border-[var(--border)] px-3 py-2.5 whitespace-nowrap"
+                    className={`font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] border-b border-[var(--border)] px-3 py-2.5 whitespace-nowrap ${
+                      h.column.columnDef.meta?.align === "right" ? "text-right" : "text-left"
+                    }`}
                   >
                     {flexRender(h.column.columnDef.header, h.getContext())}
                   </th>
@@ -90,7 +100,12 @@ export function RecordTable<T>({
                 className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--page)] transition-colors duration-100"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-2.5 tabular whitespace-nowrap">
+                  <td
+                    key={cell.id}
+                    className={`px-3 py-2.5 tabular whitespace-nowrap ${
+                      cell.column.columnDef.meta?.align === "right" ? "text-right" : ""
+                    }`}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
