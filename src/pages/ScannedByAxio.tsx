@@ -213,7 +213,12 @@ export function ScannedByAxio() {
   const activeRows: (ProjectWiseRow | ScrappedLinkRow | CombinedRow)[] =
     tab === "project-wise" ? filteredProjectWise : tab === "scrapped-links" ? filteredScrappedLinks : filteredOverall;
   const kpis = computeSimpleKpis(activeRows);
-  const totalScannedByAxio = filteredProjectWise.length + filteredScrappedLinks.length;
+  const totalScannedByAxio =
+    tab === "project-wise"
+      ? filteredProjectWise.length
+      : tab === "scrapped-links"
+        ? filteredScrappedLinks.length
+        : filteredProjectWise.length + filteredScrappedLinks.length;
   const trend = useMemo(() => trendByWeek(activeRows), [activeRows]);
   const funnelData = useMemo(() => funnel(activeRows), [activeRows]);
   const tatData = useMemo(
