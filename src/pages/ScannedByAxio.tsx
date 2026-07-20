@@ -275,7 +275,6 @@ export function ScannedByAxio() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <StatTile label="Total scanned by Axio" value={formatInt(totalScannedByAxio)} />
-            <StatTile label="Total records" value={formatInt(kpis.total)} />
             <StatTile
               label="Reported"
               value={formatPct(kpis.reportedPct)}

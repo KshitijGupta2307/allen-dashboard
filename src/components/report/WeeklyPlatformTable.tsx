@@ -51,7 +51,7 @@ export function WeeklyPlatformTable({ weeks, overall, columns, monthLabel }: Wee
                 </th>
               ))}
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
-                Links sent
+                Links scanned
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
                 Approved
@@ -76,7 +76,7 @@ export function WeeklyPlatformTable({ weeks, overall, columns, monthLabel }: Wee
                     {formatInt(w.byPlatform[c] ?? 0)}
                   </td>
                 ))}
-                <td className="px-3 py-2.5 text-right tabular font-medium">{formatInt(w.linksSent)}</td>
+                <td className="px-3 py-2.5 text-right tabular font-medium">{formatInt(w.linksScanned)}</td>
                 <td className="px-3 py-2.5 text-right tabular">{formatInt(w.linksApproved)}</td>
                 <td className="px-3 py-2.5 text-right tabular">{formatInt(w.linksRemoved)}</td>
                 <td className="px-3 py-2.5 text-right tabular">
@@ -98,7 +98,7 @@ export function WeeklyPlatformTable({ weeks, overall, columns, monthLabel }: Wee
                   {formatInt(weeks.reduce((a, w) => a + (w.byPlatform[c] ?? 0), 0))}
                 </td>
               ))}
-              <td className="px-3 py-2.5 text-right tabular">{formatInt(overall.linksSent)}</td>
+              <td className="px-3 py-2.5 text-right tabular">{formatInt(overall.linksScanned)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(overall.linksApproved)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(overall.linksRemoved)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(overall.pending)}</td>

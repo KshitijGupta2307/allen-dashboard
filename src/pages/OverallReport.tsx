@@ -146,15 +146,15 @@ export function OverallReport() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                <StatTile label="Total links sent" value={formatInt(overall.linksSent)} />
+                <StatTile label="Total links scanned" value={formatInt(overall.linksScanned)} />
                 <StatTile label="Total approved" value={formatInt(overall.linksApproved)} />
                 <StatTile label="Total removed" value={formatInt(overall.linksRemoved)} accent="good" />
+                <StatTile label="Removal %" value={formatPct(overall.removalPct)} accent="good" />
                 <StatTile
                   label="Pending links"
                   value={formatInt(overall.pending)}
                   accent={overall.pending > 0 ? "warning" : "neutral"}
                 />
-                <StatTile label="Removal %" value={formatPct(overall.removalPct)} accent="good" />
               </div>
 
               <WeeklyPlatformTable weeks={weeks} overall={overall} columns={columns} monthLabel={selected.label} />
