@@ -41,7 +41,7 @@ export function DailyBreakdownTable({ days }: DailyBreakdownTableProps) {
                   Date
                 </th>
                 <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
-                  Links sent
+                  Links scanned
                 </th>
                 <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
                   Approved
@@ -61,7 +61,7 @@ export function DailyBreakdownTable({ days }: DailyBreakdownTableProps) {
               {days.map((d) => (
                 <tr key={d.label} className="border-t border-[var(--border)] hover:bg-[var(--page)] transition-colors duration-100">
                   <td className="px-3 py-2.5 whitespace-nowrap text-[var(--text-secondary)]">{d.label}</td>
-                  <td className="px-3 py-2.5 text-right tabular">{formatInt(d.linksSent)}</td>
+                  <td className="px-3 py-2.5 text-right tabular">{formatInt(d.linksScanned)}</td>
                   <td className="px-3 py-2.5 text-right tabular">{formatInt(d.linksApproved)}</td>
                   <td className="px-3 py-2.5 text-right tabular">{formatInt(d.linksRemoved)}</td>
                   <td className="px-3 py-2.5 text-right tabular">{formatInt(d.pending)}</td>

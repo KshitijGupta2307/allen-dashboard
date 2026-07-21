@@ -5,7 +5,6 @@ export interface ReportableRow {
   reported: boolean | null;
   removed: boolean | null;
   tatDays: number | null;
-  noOfLinks?: number;
 }
 
 export interface MonthOption {
@@ -61,7 +60,7 @@ function bucketPlatform(platform: string, columns: string[]): string {
 }
 
 export interface RowStats {
-  linksSent: number;
+  linksScanned: number;
   linksApproved: number;
   linksRemoved: number;
   pending: number;
@@ -69,12 +68,12 @@ export interface RowStats {
 }
 
 function computeRowStats<T extends ReportableRow>(rows: T[]): RowStats {
-  const linksSent = rows.reduce((a, s) => a + (s.noOfLinks ?? 1), 0);
+  const linksScanned = rows.length;
   const linksApproved = rows.filter((s) => s.reported).length;
   const linksRemoved = rows.filter((s) => s.removed).length;
   const pending = rows.filter((s) => s.reported && !s.removed).length;
   return {
-    linksSent,
+    linksScanned,
     linksApproved,
     linksRemoved,
     pending,

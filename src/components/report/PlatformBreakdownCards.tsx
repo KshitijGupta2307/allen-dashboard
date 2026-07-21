@@ -80,7 +80,7 @@ function PlatformCard({ row }: { row: PlatformRow }) {
       <div className="grid grid-cols-4 gap-2">
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="text-[9.5px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Scanned</span>
-          <span className="text-[15px] font-bold tabular text-[var(--text-primary)] truncate">{formatInt(row.linksSent)}</span>
+          <span className="text-[15px] font-bold tabular text-[var(--text-primary)] truncate">{formatInt(row.linksScanned)}</span>
         </div>
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="text-[9.5px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Approved</span>

@@ -39,7 +39,7 @@ export function PlatformBreakdownTable({ rows, total, tatBucket, onTatBucketChan
                 Platform
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
-                Scanned links
+                Links scanned
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
                 Reported
@@ -67,7 +67,7 @@ export function PlatformBreakdownTable({ rows, total, tatBucket, onTatBucketChan
                     {r.platform}
                   </span>
                 </td>
-                <td className="px-3 py-2.5 text-right tabular">{formatInt(r.linksSent)}</td>
+                <td className="px-3 py-2.5 text-right tabular">{formatInt(r.linksScanned)}</td>
                 <td className="px-3 py-2.5 text-right tabular">{formatInt(r.linksApproved)}</td>
                 <td className="px-3 py-2.5 text-right tabular">{formatInt(r.linksRemoved)}</td>
                 <td className="px-3 py-2.5 text-right tabular font-medium">{formatPct(r.removalPct)}</td>
@@ -83,7 +83,7 @@ export function PlatformBreakdownTable({ rows, total, tatBucket, onTatBucketChan
             ))}
             <tr className="border-t-2 border-[var(--border-strong)] bg-[var(--page)] font-semibold">
               <td className="px-3 py-2.5">Grand total</td>
-              <td className="px-3 py-2.5 text-right tabular">{formatInt(total.linksSent)}</td>
+              <td className="px-3 py-2.5 text-right tabular">{formatInt(total.linksScanned)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(total.linksApproved)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(total.linksRemoved)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatPct(total.removalPct)}</td>

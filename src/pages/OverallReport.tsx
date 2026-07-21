@@ -166,10 +166,10 @@ export function OverallReport() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 <StatTile
                   label="Total links scanned"
-                  value={formatInt(overall.linksSent)}
+                  value={formatInt(overall.linksScanned)}
                   accent="brand"
                   icon={LinkIcon}
-                  trend={weeks.map((w) => w.linksSent)}
+                  trend={weeks.map((w) => w.linksScanned)}
                 />
                 <StatTile
                   label="Total approved"

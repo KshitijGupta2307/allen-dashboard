@@ -8,9 +8,9 @@ interface PlatformContributionChartProps {
 }
 
 export function PlatformContributionChart({ rows }: PlatformContributionChartProps) {
-  const total = rows.reduce((a, r) => a + r.linksSent, 0);
+  const total = rows.reduce((a, r) => a + r.linksScanned, 0);
   const segments = rows
-    .map((r) => ({ platform: r.platform, value: r.linksSent, pct: total ? r.linksSent / total : 0 }))
+    .map((r) => ({ platform: r.platform, value: r.linksScanned, pct: total ? r.linksScanned / total : 0 }))
     .filter((s) => s.value > 0)
     .sort((a, b) => b.value - a.value);
 
