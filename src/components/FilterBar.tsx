@@ -9,7 +9,6 @@ interface FilterBarProps {
   onChange: (next: Filters) => void;
   platforms: string[];
   contentTypes: string[];
-  maxDate: Date | null;
   resultCount: number;
 }
 
@@ -19,19 +18,18 @@ const STATUS_OPTIONS: { value: Status; label: string }[] = [
   { value: "not-reported", label: "Not reported" },
 ];
 
-export function FilterBar({ filters, onChange, platforms, contentTypes, maxDate, resultCount }: FilterBarProps) {
+export function FilterBar({ filters, onChange, platforms, contentTypes, resultCount }: FilterBarProps) {
   const hasActiveFilters =
     filters.from || filters.to || filters.platforms.length || filters.contentTypes.length || filters.statuses.length;
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
+      className="flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
       <TimelineDateFilter
         from={filters.from}
         to={filters.to}
-        maxDate={maxDate}
         onChange={(from, to) => onChange({ ...filters, from, to })}
       />
 

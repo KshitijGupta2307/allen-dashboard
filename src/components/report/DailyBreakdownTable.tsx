@@ -12,7 +12,7 @@ export function DailyBreakdownTable({ days }: DailyBreakdownTableProps) {
 
   return (
     <div
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] overflow-hidden"
+      className="rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] overflow-hidden"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
       <button

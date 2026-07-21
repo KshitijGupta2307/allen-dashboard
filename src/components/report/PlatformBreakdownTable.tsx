@@ -16,12 +16,12 @@ export function PlatformBreakdownTable({ rows, total, tatBucket, onTatBucketChan
 
   return (
     <div
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] overflow-hidden"
+      className="rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] overflow-hidden"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] gap-3 flex-wrap">
         <div>
-          <h3 className="text-[13px] font-semibold">Platform breakdown</h3>
+          <h3 className="text-[13px] font-semibold">Platform-wise summary</h3>
           <p className="text-[12px] text-[var(--text-muted)]">{rows.length} platforms</p>
         </div>
         <Select
@@ -39,19 +39,19 @@ export function PlatformBreakdownTable({ rows, total, tatBucket, onTatBucketChan
                 Platform
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
-                Links sent
+                Scanned links
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
-                Approved
+                Reported
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
                 Removed
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
-                Pending
+                Removal rate
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
-                Rate
+                Pending links
               </th>
               <th className="text-right font-semibold uppercase tracking-wide text-[10px] text-[var(--text-muted)] px-3 py-2.5 whitespace-nowrap">
                 {tatLabel}
@@ -70,18 +70,24 @@ export function PlatformBreakdownTable({ rows, total, tatBucket, onTatBucketChan
                 <td className="px-3 py-2.5 text-right tabular">{formatInt(r.linksSent)}</td>
                 <td className="px-3 py-2.5 text-right tabular">{formatInt(r.linksApproved)}</td>
                 <td className="px-3 py-2.5 text-right tabular">{formatInt(r.linksRemoved)}</td>
-                <td className="px-3 py-2.5 text-right tabular">{formatInt(r.pending)}</td>
-                <td className="px-3 py-2.5 text-right tabular">{formatPct(r.removalPct)}</td>
-                <td className="px-3 py-2.5 text-right tabular font-medium">{formatInt(r.tatCount)}</td>
+                <td className="px-3 py-2.5 text-right tabular font-medium">{formatPct(r.removalPct)}</td>
+                <td className="px-3 py-2.5 text-right tabular">
+                  {r.pending > 0 ? (
+                    <span className="text-[var(--status-warning-text)] font-medium">{formatInt(r.pending)}</span>
+                  ) : (
+                    formatInt(r.pending)
+                  )}
+                </td>
+                <td className="px-3 py-2.5 text-right tabular">{formatInt(r.tatCount)}</td>
               </tr>
             ))}
-            <tr className="border-t border-[var(--border-strong)] bg-[var(--page)] font-semibold">
-              <td className="px-3 py-2.5">Total</td>
+            <tr className="border-t-2 border-[var(--border-strong)] bg-[var(--page)] font-semibold">
+              <td className="px-3 py-2.5">Grand total</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(total.linksSent)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(total.linksApproved)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(total.linksRemoved)}</td>
-              <td className="px-3 py-2.5 text-right tabular">{formatInt(total.pending)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatPct(total.removalPct)}</td>
+              <td className="px-3 py-2.5 text-right tabular">{formatInt(total.pending)}</td>
               <td className="px-3 py-2.5 text-right tabular">{formatInt(total.tatCount)}</td>
             </tr>
           </tbody>

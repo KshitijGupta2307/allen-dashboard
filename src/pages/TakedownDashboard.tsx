@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { useSubmissions } from "../hooks/useSubmissions";
 import type { Filters } from "../lib/types";
-import { computeKpis, filterSubmissions, funnel, tatHistogram, trendByWeek } from "../lib/aggregate";
+import { computeKpis, filterSubmissions, tatHistogram, trendByWeek } from "../lib/aggregate";
 import { formatCompact, formatInt, formatPct } from "../lib/format";
 import { AppShell } from "../components/AppShell";
 import { FilterBar } from "../components/FilterBar";
 import { StatTile } from "../components/StatTile";
+import { LinkIcon, CheckCircleIcon, ShieldCheckIcon, ClockIcon, EyeIcon } from "../components/icons";
 import { TrendChart } from "../components/charts/TrendChart";
 import { FunnelChart } from "../components/charts/FunnelChart";
 import { TatChart } from "../components/charts/TatChart";
@@ -20,15 +21,18 @@ export function TakedownDashboard() {
 
   const platforms = useMemo(() => [...new Set(data.map((s) => s.platform))].sort(), [data]);
   const contentTypes = useMemo(() => [...new Set(data.map((s) => s.contentType))].sort(), [data]);
-  const maxDate = useMemo(
-    () => data.reduce<Date | null>((max, s) => (s.date && (!max || s.date > max) ? s.date : max), null),
-    [data],
-  );
 
   const filtered = useMemo(() => filterSubmissions(data, filters), [data, filters]);
   const kpis = useMemo(() => computeKpis(filtered), [filtered]);
   const trend = useMemo(() => trendByWeek(filtered), [filtered]);
-  const funnelData = useMemo(() => funnel(filtered), [filtered]);
+  const funnelData = useMemo(
+    () => [
+      { stage: "Submitted", value: kpis.totalNoOfLinks, pct: 100 },
+      { stage: "Reported", value: kpis.reported, pct: kpis.reportedPct * 100 },
+      { stage: "Removed", value: kpis.removed, pct: kpis.removedPct * 100 },
+    ],
+    [kpis],
+  );
   const tatData = useMemo(() => tatHistogram(filtered), [filtered]);
 
   return (
@@ -50,7 +54,6 @@ export function TakedownDashboard() {
             onChange={setFilters}
             platforms={platforms}
             contentTypes={contentTypes}
-            maxDate={maxDate}
             resultCount={filtered.length}
           />
 
@@ -63,23 +66,38 @@ export function TakedownDashboard() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 <StatTile
                   label="Total submissions"
-                  value={formatInt(kpis.total)}
+                  value={formatInt(kpis.totalNoOfLinks)}
+                  accent="brand"
+                  icon={LinkIcon}
+                  trend={trend.map((t) => t.submitted)}
                 />
                 <StatTile
                   label="Reported"
                   value={formatPct(kpis.reportedPct)}
+                  sub={`${formatInt(kpis.reported)} of ${formatInt(kpis.totalNoOfLinks)}`}
+                  accent="info"
+                  icon={CheckCircleIcon}
                 />
                 <StatTile
                   label="Removed"
                   value={formatPct(kpis.removedPct)}
+                  sub={`${formatInt(kpis.removed)} of ${formatInt(kpis.reported)}`}
                   accent="good"
+                  icon={ShieldCheckIcon}
+                  trend={trend.map((t) => t.removed)}
                 />
                 <StatTile
                   label="Pending removal"
                   value={formatInt(kpis.pending)}
                   accent={kpis.pending > 0 ? "warning" : "neutral"}
+                  icon={ClockIcon}
                 />
-                <StatTile label="Views on submitted content" value={formatCompact(kpis.totalViewsSubmitted)} />
+                <StatTile
+                  label="Views on submitted content"
+                  value={formatCompact(kpis.totalViewsSubmitted)}
+                  accent="violet"
+                  icon={EyeIcon}
+                />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

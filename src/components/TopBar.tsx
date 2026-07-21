@@ -1,16 +1,19 @@
+import type { Route } from "../lib/routes";
 import { Button } from "./Button";
+import { ModeMenu } from "./ModeMenu";
 import { MenuIcon, RefreshIcon } from "./icons";
 
 interface TopBarProps {
   title: string;
   subtitle: string;
+  route: Route;
   lastUpdated: Date | null;
   loading: boolean;
   onRefresh: () => void;
   onOpenMobileNav: () => void;
 }
 
-export function TopBar({ title, subtitle, lastUpdated, loading, onRefresh, onOpenMobileNav }: TopBarProps) {
+export function TopBar({ title, subtitle, route, lastUpdated, loading, onRefresh, onOpenMobileNav }: TopBarProps) {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-[var(--border)] bg-[var(--surface-1)]/95 backdrop-blur-sm">
       <div className="flex items-center gap-3 min-w-0">
@@ -28,6 +31,7 @@ export function TopBar({ title, subtitle, lastUpdated, loading, onRefresh, onOpe
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
+        <ModeMenu route={route} />
         <span className="hidden sm:inline text-[12px] text-[var(--text-muted)] tabular">
           {lastUpdated
             ? `Updated ${lastUpdated.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`

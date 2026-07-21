@@ -8,6 +8,7 @@ import { formatDate, formatInt, formatPct } from "../lib/format";
 import type { CombinedRow, ProjectWiseRow, ScrappedLinkRow, Status } from "../lib/types";
 import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
+import { LinkIcon, CheckCircleIcon, ShieldCheckIcon, ClockIcon } from "../components/icons";
 import { StatusBadge } from "../components/StatusBadge";
 import { MultiSelect } from "../components/MultiSelect";
 import { TabViewSelect, type TabViewOption } from "../components/TabViewSelect";
@@ -178,11 +179,6 @@ export function ScannedByAxio() {
                 : (projectWise.lastUpdated ?? scrappedLinks.lastUpdated),
           };
 
-  const maxDate = useMemo(
-    () => active.data.reduce<Date | null>((max, r) => (r.date && (!max || r.date > max) ? r.date : max), null),
-    [active.data],
-  );
-
   const platformOptions = useMemo(
     () => [...new Set(active.data.map((r) => r.platform))].sort(),
     [active.data],
@@ -246,7 +242,7 @@ export function ScannedByAxio() {
       {(active.data.length > 0 || (!active.loading && !active.error)) && (
         <main className="flex-1 flex flex-col gap-4 px-6 py-4 max-w-[1400px] w-full mx-auto">
           <div
-            className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
+            className="flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
             style={{ boxShadow: "var(--shadow-card)" }}
           >
             <TabViewSelect label="Criteria" options={TAB_OPTIONS} value={tab} onChange={handleTabChange} />
@@ -256,7 +252,6 @@ export function ScannedByAxio() {
             <TimelineDateFilter
               from={dateFrom}
               to={dateTo}
-              maxDate={maxDate}
               onChange={(from, to) => {
                 setDateFrom(from);
                 setDateTo(to);
@@ -273,22 +268,34 @@ export function ScannedByAxio() {
             <p className="text-[12px] text-[var(--status-critical)]">Last refresh failed: {active.error}</p>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            <StatTile label="Total scanned by Axio" value={formatInt(totalScannedByAxio)} />
-            <StatTile label="Total records" value={formatInt(kpis.total)} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatTile
+              label="Total scanned by Axio"
+              value={formatInt(totalScannedByAxio)}
+              accent="brand"
+              icon={LinkIcon}
+              trend={trend.map((t) => t.submitted)}
+            />
             <StatTile
               label="Reported"
               value={formatPct(kpis.reportedPct)}
+              sub={`${formatInt(kpis.reported)} of ${formatInt(kpis.total)}`}
+              accent="info"
+              icon={CheckCircleIcon}
             />
             <StatTile
               label="Removed"
               value={formatPct(kpis.removedPct)}
+              sub={`${formatInt(kpis.removed)} of ${formatInt(kpis.reported)}`}
               accent="good"
+              icon={ShieldCheckIcon}
+              trend={trend.map((t) => t.removed)}
             />
             <StatTile
               label="Pending removal"
               value={formatInt(kpis.pending)}
               accent={kpis.pending > 0 ? "warning" : "neutral"}
+              icon={ClockIcon}
             />
           </div>
 

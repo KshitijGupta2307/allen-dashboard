@@ -23,6 +23,7 @@ export function AppShell({ title, subtitle, route, lastUpdated, loading, onRefre
         <TopBar
           title={title}
           subtitle={subtitle}
+          route={route}
           lastUpdated={lastUpdated}
           loading={loading}
           onRefresh={onRefresh}

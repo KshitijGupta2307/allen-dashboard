@@ -6,10 +6,13 @@ import { normalizeProjectWiseRows, normalizeScrappedLinkRows } from "../lib/pars
 import { combineRows } from "../lib/aggregate";
 import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
+import { LinkIcon, CheckCircleIcon, ShieldCheckIcon, ClockIcon, GaugeIcon } from "../components/icons";
 import { Select } from "../components/Select";
 import { TabViewSelect, type TabViewOption } from "../components/TabViewSelect";
 import { WeeklyPlatformTable } from "../components/report/WeeklyPlatformTable";
+import { PlatformBreakdownCards } from "../components/report/PlatformBreakdownCards";
 import { PlatformBreakdownTable } from "../components/report/PlatformBreakdownTable";
+import { PlatformContributionChart } from "../components/charts/PlatformContributionChart";
 import { DailyBreakdownTable } from "../components/report/DailyBreakdownTable";
 import { LoadingState, ErrorState, EmptyState } from "../components/StatusStates";
 import { formatInt, formatPct } from "../lib/format";
@@ -27,6 +30,13 @@ import {
 
 function monthKeyOf(year: number, month: number): string {
   return `${year}-${month}`;
+}
+
+/** Excludes stray future-dated rows (typo'd years etc.) from counting as "latest" —
+ * the default should be the real current month, not whatever sorts last in the data. */
+function isNotAfterToday(year: number, month: number): boolean {
+  const now = new Date();
+  return year < now.getFullYear() || (year === now.getFullYear() && month <= now.getMonth());
 }
 
 type Source = "allen-submission" | "scanned-by-axio" | "overall";
@@ -94,7 +104,8 @@ export function OverallReport() {
 
   const selected = useMemo(() => {
     const found = monthKey ? months.find((o) => monthKeyOf(o.year, o.month) === monthKey) : null;
-    return found ?? months[0] ?? null;
+    if (found) return found;
+    return months.find((o) => isNotAfterToday(o.year, o.month)) ?? months[0] ?? null;
   }, [monthKey, months]);
 
   const monthRows = useMemo(
@@ -126,17 +137,18 @@ export function OverallReport() {
       {error && data.length === 0 && <ErrorState message={error} onRetry={refresh} />}
 
       {(data.length > 0 || (!loading && !error)) && (
-        <main className="flex-1 flex flex-col gap-4 px-6 py-4 max-w-[1400px] w-full mx-auto">
+        <main className="flex-1 flex flex-col gap-5 px-6 py-4 max-w-[1400px] w-full mx-auto">
           {error && <p className="text-[12px] text-[var(--status-critical)]">Last refresh failed: {error}</p>}
 
-          <TabViewSelect label="Source" options={SOURCE_OPTIONS} value={source} onChange={handleSourceChange} />
+          <div
+            className="flex items-center justify-between gap-3 flex-wrap rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
+            style={{ boxShadow: "var(--shadow-card)" }}
+          >
+            <TabViewSelect label="Source" options={SOURCE_OPTIONS} value={source} onChange={handleSourceChange} />
 
-          {!selected ? (
-            <EmptyState />
-          ) : (
-            <>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <p className="text-[12px] text-[var(--text-muted)]">Weekly breakdown by platform — previous months</p>
+            {selected && (
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-[var(--text-muted)]">Reporting period</span>
                 <Select
                   ariaLabel="Report month"
                   value={monthKeyOf(selected.year, selected.month)}
@@ -144,22 +156,68 @@ export function OverallReport() {
                   options={months.map((o) => ({ value: monthKeyOf(o.year, o.month), label: o.label }))}
                 />
               </div>
+            )}
+          </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                <StatTile label="Total links sent" value={formatInt(overall.linksSent)} />
-                <StatTile label="Total approved" value={formatInt(overall.linksApproved)} />
-                <StatTile label="Total removed" value={formatInt(overall.linksRemoved)} accent="good" />
+          {!selected ? (
+            <EmptyState />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <StatTile
+                  label="Total links scanned"
+                  value={formatInt(overall.linksSent)}
+                  accent="brand"
+                  icon={LinkIcon}
+                  trend={weeks.map((w) => w.linksSent)}
+                />
+                <StatTile
+                  label="Total approved"
+                  value={formatInt(overall.linksApproved)}
+                  accent="info"
+                  icon={CheckCircleIcon}
+                  trend={weeks.map((w) => w.linksApproved)}
+                />
+                <StatTile
+                  label="Total removed"
+                  value={formatInt(overall.linksRemoved)}
+                  accent="good"
+                  icon={ShieldCheckIcon}
+                  trend={weeks.map((w) => w.linksRemoved)}
+                />
                 <StatTile
                   label="Pending links"
                   value={formatInt(overall.pending)}
                   accent={overall.pending > 0 ? "warning" : "neutral"}
+                  icon={ClockIcon}
                 />
-                <StatTile label="Removal %" value={formatPct(overall.removalPct)} accent="good" />
+                <StatTile
+                  label="Removal %"
+                  value={formatPct(overall.removalPct)}
+                  sub={`${formatInt(overall.linksRemoved)} of ${formatInt(overall.linksApproved)}`}
+                  accent="good"
+                  icon={GaugeIcon}
+                />
               </div>
+
+              <PlatformBreakdownCards
+                rows={platformRows}
+                subtitle={`Performance across all content platforms — ${selected.label}`}
+              />
 
               <WeeklyPlatformTable weeks={weeks} overall={overall} columns={columns} monthLabel={selected.label} />
 
-              <PlatformBreakdownTable rows={platformRows} total={overall} tatBucket={tatBucket} onTatBucketChange={setTatBucket} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                <div className="lg:col-span-2">
+                  <PlatformBreakdownTable
+                    rows={platformRows}
+                    total={overall}
+                    tatBucket={tatBucket}
+                    onTatBucketChange={setTatBucket}
+                  />
+                </div>
+                <PlatformContributionChart rows={platformRows} />
+              </div>
 
               <DailyBreakdownTable days={days} />
             </>

@@ -1,5 +1,11 @@
 import type { CombinedRow, Filters, ProjectWiseRow, ScrappedLinkRow, Status, Submission } from "./types";
 
+/** Turnaround time in whole days: removal date minus reporting date. */
+function diffDays(from: Date | null, to: Date | null): number | null {
+  if (!from || !to) return null;
+  return Math.round((to.getTime() - from.getTime()) / 86_400_000);
+}
+
 export function simpleStatus(reported: boolean | null, removed: boolean | null): Status {
   if (removed) return "removed";
   if (reported) return "pending";
@@ -36,21 +42,23 @@ export interface Kpis {
   totalViewsSubmitted: number;
 }
 
+/** Reported/removed/pending are weighted by "No. of Links" — one row can represent several
+ * links — so they stay consistent with the link-based Total submissions figure. */
 export function computeKpis(data: Submission[]): Kpis {
   const total = data.length;
   const totalNoOfLinks = data.reduce((a, s) => a + s.noOfLinks, 0);
-  const reported = data.filter((s) => s.reported).length;
-  const removed = data.filter((s) => s.removed).length;
-  const pending = data.filter((s) => statusOf(s) === "pending").length;
+  const reported = data.filter((s) => s.reported).reduce((a, s) => a + s.noOfLinks, 0);
+  const removed = data.filter((s) => s.removed).reduce((a, s) => a + s.noOfLinks, 0);
+  const pending = data.filter((s) => statusOf(s) === "pending").reduce((a, s) => a + s.noOfLinks, 0);
   const tats = data.map((s) => s.tatDays).filter((v): v is number => v !== null);
   const avgTatDays = tats.length ? tats.reduce((a, b) => a + b, 0) / tats.length : null;
-  const totalLinksActioned = data.filter((s) => s.removed).reduce((a, s) => a + s.noOfLinks, 0);
+  const totalLinksActioned = removed;
   const totalViewsSubmitted = data.reduce((a, s) => a + (s.views ?? 0), 0);
   return {
     total,
     totalNoOfLinks,
     reported,
-    reportedPct: total ? reported / total : 0,
+    reportedPct: totalNoOfLinks ? reported / totalNoOfLinks : 0,
     removed,
     removedPct: reported ? removed / reported : 0,
     pending,
@@ -98,7 +106,7 @@ export function combineRows(projectWise: ProjectWiseRow[], scrappedLinks: Scrapp
     reportingDate: r.reportingDate,
     removed: r.removed,
     removalDate: r.removalDate,
-    tatDays: null,
+    tatDays: diffDays(r.reportingDate, r.removalDate),
     remarks: "",
   }));
   const fromScrappedLinks: CombinedRow[] = scrappedLinks.map((r) => ({
@@ -153,30 +161,47 @@ export interface WeekPoint {
   removed: number;
 }
 
+function shortDate(d: Date): string {
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/** Labels the bucket by the actual data it holds (earliest–latest date present), not the
+ * calendar week's Monday — a filtered range that starts mid-week would otherwise show a
+ * label before the selected "from" date, making it look like out-of-range data leaked in. */
+function rangeLabel(min: Date, max: Date): string {
+  return min.getTime() === max.getTime() ? shortDate(min) : `${shortDate(min)}–${shortDate(max)}`;
+}
+
+interface WeekAccumulator extends WeekPoint {
+  minDate: Date;
+  maxDate: Date;
+}
+
 export function trendByWeek<T extends { date: Date | null; removed: boolean | null }>(data: T[]): WeekPoint[] {
-  const m = new Map<string, WeekPoint>();
+  const m = new Map<string, WeekAccumulator>();
   for (const item of data) {
     if (!item.date) continue;
     const ws = startOfWeek(item.date);
     const key = ws.toISOString();
     if (!m.has(key)) {
-      m.set(key, {
-        weekStart: ws,
-        label: ws.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-        submitted: 0,
-        removed: 0,
-      });
+      m.set(key, { weekStart: ws, label: "", submitted: 0, removed: 0, minDate: item.date, maxDate: item.date });
     }
     const p = m.get(key)!;
     p.submitted += 1;
     if (item.removed) p.removed += 1;
+    if (item.date < p.minDate) p.minDate = item.date;
+    if (item.date > p.maxDate) p.maxDate = item.date;
   }
-  return [...m.values()].sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime());
+  return [...m.values()]
+    .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
+    .map((p) => ({ weekStart: p.weekStart, label: rangeLabel(p.minDate, p.maxDate), submitted: p.submitted, removed: p.removed }));
 }
 
 export interface FunnelStage {
   stage: string;
   value: number;
+  /** Percentage of the previous stage (100 for the first stage) — same basis as the KPI tiles. */
+  pct: number;
 }
 
 export function funnel(data: { reported: boolean | null; removed: boolean | null }[]): FunnelStage[] {
@@ -184,9 +209,9 @@ export function funnel(data: { reported: boolean | null; removed: boolean | null
   const reported = data.filter((s) => s.reported).length;
   const removed = data.filter((s) => s.removed).length;
   return [
-    { stage: "Submitted", value: submitted },
-    { stage: "Reported", value: reported },
-    { stage: "Removed", value: removed },
+    { stage: "Submitted", value: submitted, pct: 100 },
+    { stage: "Reported", value: reported, pct: submitted ? (reported / submitted) * 100 : 0 },
+    { stage: "Removed", value: removed, pct: reported ? (removed / reported) * 100 : 0 },
   ];
 }
 

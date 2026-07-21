@@ -1,3 +1,16 @@
+import {
+  PlayCircleIcon,
+  CameraIcon,
+  GlobeIcon,
+  SendIcon,
+  MessageCircleIcon,
+  AtSignIcon,
+  BriefcaseIcon,
+  LinkIcon,
+  type IconProps,
+} from "../components/icons";
+import type { ComponentType } from "react";
+
 /**
  * Fixed category → palette-slot registries. Color must follow the entity, never
  * its rank in a sorted/filtered list, so each known value always resolves to the
@@ -63,6 +76,21 @@ function fallbackSlot(key: string): string {
 
 export function platformColor(platform: string): string {
   return resolveVar(PLATFORM_SLOT[platform] ?? fallbackSlot(platform));
+}
+
+const PLATFORM_ICON: Record<string, ComponentType<IconProps>> = {
+  Instagram: CameraIcon,
+  YouTube: PlayCircleIcon,
+  Facebook: GlobeIcon,
+  Twitter: AtSignIcon,
+  Reddit: MessageCircleIcon,
+  Telegram: SendIcon,
+  LinkedIn: BriefcaseIcon,
+  Weblink: GlobeIcon,
+};
+
+export function platformIcon(platform: string): ComponentType<IconProps> {
+  return PLATFORM_ICON[platform] ?? LinkIcon;
 }
 
 export function contentTypeColor(type: string): string {
