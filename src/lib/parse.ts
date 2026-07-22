@@ -456,12 +456,3 @@ export function normalizeDrmWebLinkRows(rows: string[][]): DrmRow[] {
 export function combineDrmRows(telegram: DrmRow[], youtube: DrmRow[], webLinks: DrmRow[]): DrmRow[] {
   return [...telegram, ...youtube, ...webLinks];
 }
-
-export function normalizeDrmRows(rows: string[][]): DrmRow[] {
-  const out: DrmRow[] = [];
-  rows.forEach((row, i) => {
-    const r = normalizeDrmRow(row, i);
-    if (r) out.push(r);
-  });
-  return out;
-}
