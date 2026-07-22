@@ -25,6 +25,7 @@ const PLATFORM_SLOT: Record<string, string> = {
   Telegram: "--series-2",
   LinkedIn: "--series-7",
   Weblink: "--series-4",
+  "Web-Links": "--series-4",
   Unknown: "--text-muted",
   Other: "--text-muted",
 };

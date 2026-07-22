@@ -1,4 +1,4 @@
-import type { ProjectWiseRow, ScrappedLinkRow, Submission } from "./types";
+import type { DrmRow, ProjectWiseRow, ScrappedLinkRow, Submission } from "./types";
 
 /** Sheet dates are entered as free-text d/m/yyyy (e.g. "28/8/2025", "06/03/2026"). */
 export function parseDMY(raw: string): Date | null {
@@ -280,6 +280,187 @@ export function normalizeScrappedLinkRows(rows: string[][]): ScrappedLinkRow[] {
   const out: ScrappedLinkRow[] = [];
   rows.forEach((row, i) => {
     const r = normalizeScrappedLinkRow(row, i);
+    if (r) out.push(r);
+  });
+  return out;
+}
+
+/** Fixed column order in the DRM sheet's "Telegram" tab — channel-level rows (one row per
+ * channel, not per link). Two columns are both literally titled "Channel Removed"; the second
+ * (14), sitting right next to Removal Date, is the authoritative one — position, not header
+ * text, is what matters, same rule the ORM tabs use. */
+const COL_DRM_TELEGRAM = {
+  date: 0,
+  category: 1,
+  channelName: 2,
+  link: 3,
+  subscribers: 4,
+  linksScanned: 5,
+  reported: 7,
+  reportingDate: 8,
+  piracyStatus: 13,
+  removed: 14,
+  removalDate: 15,
+} as const;
+
+export function normalizeDrmTelegramRow(row: string[], id: number): DrmRow | null {
+  const dateRaw = cell(row, COL_DRM_TELEGRAM.date);
+  const link = cell(row, COL_DRM_TELEGRAM.link);
+  const channelName = cell(row, COL_DRM_TELEGRAM.channelName);
+  if (!dateRaw && !link && !channelName) return null;
+
+  const reportingDate = parseDMY(cell(row, COL_DRM_TELEGRAM.reportingDate));
+  const removalDate = parseDMY(cell(row, COL_DRM_TELEGRAM.removalDate));
+
+  return {
+    id: `tg-${id}`,
+    source: "Telegram",
+    date: parseDMY(dateRaw),
+    dateRaw,
+    platform: "Telegram",
+    category: cell(row, COL_DRM_TELEGRAM.category),
+    link,
+    channelName,
+    subscribers: parseCount(cell(row, COL_DRM_TELEGRAM.subscribers)),
+    views: null,
+    linksScanned: parseIntSafe(cell(row, COL_DRM_TELEGRAM.linksScanned), 0),
+    noOfLinks: 1,
+    reported: parseBool(cell(row, COL_DRM_TELEGRAM.reported)),
+    reportingDate,
+    removed: parseBool(cell(row, COL_DRM_TELEGRAM.removed)),
+    removalDate,
+    tatDays: diffDays(reportingDate, removalDate),
+    remarks: cell(row, COL_DRM_TELEGRAM.piracyStatus),
+  };
+}
+
+export function normalizeDrmTelegramRows(rows: string[][]): DrmRow[] {
+  const out: DrmRow[] = [];
+  rows.forEach((row, i) => {
+    const r = normalizeDrmTelegramRow(row, i);
+    if (r) out.push(r);
+  });
+  return out;
+}
+
+/** Fixed column order in the DRM sheet's "YouTube" tab — per-video rows. */
+const COL_DRM_YOUTUBE = {
+  date: 0,
+  category: 1,
+  link: 2,
+  channelId: 3,
+  subscribers: 4,
+  views: 5,
+  noOfLinks: 6,
+  reported: 8,
+  reportingDate: 9,
+  removed: 10,
+  removalDate: 11,
+  remarks: 12,
+} as const;
+
+export function normalizeDrmYoutubeRow(row: string[], id: number): DrmRow | null {
+  const dateRaw = cell(row, COL_DRM_YOUTUBE.date);
+  const link = cell(row, COL_DRM_YOUTUBE.link);
+  const channelName = cell(row, COL_DRM_YOUTUBE.channelId);
+  if (!dateRaw && !link && !channelName) return null;
+
+  const reportingDate = parseDMY(cell(row, COL_DRM_YOUTUBE.reportingDate));
+  const removalDate = parseDMY(cell(row, COL_DRM_YOUTUBE.removalDate));
+
+  return {
+    id: `yt-${id}`,
+    source: "YouTube",
+    date: parseDMY(dateRaw),
+    dateRaw,
+    platform: "YouTube",
+    category: cell(row, COL_DRM_YOUTUBE.category),
+    link,
+    channelName,
+    subscribers: parseCount(cell(row, COL_DRM_YOUTUBE.subscribers)),
+    views: parseCount(cell(row, COL_DRM_YOUTUBE.views)),
+    linksScanned: null,
+    noOfLinks: parseIntSafe(cell(row, COL_DRM_YOUTUBE.noOfLinks), 0),
+    reported: parseBool(cell(row, COL_DRM_YOUTUBE.reported)),
+    reportingDate,
+    removed: parseBool(cell(row, COL_DRM_YOUTUBE.removed)),
+    removalDate,
+    tatDays: diffDays(reportingDate, removalDate),
+    remarks: cell(row, COL_DRM_YOUTUBE.remarks),
+  };
+}
+
+export function normalizeDrmYoutubeRows(rows: string[][]): DrmRow[] {
+  const out: DrmRow[] = [];
+  rows.forEach((row, i) => {
+    const r = normalizeDrmYoutubeRow(row, i);
+    if (r) out.push(r);
+  });
+  return out;
+}
+
+/** Fixed column order in the DRM sheet's "Web-Links" tab — per-link rows across misc. sites
+ * (Scribd, Google Drive, etc.), unlike Telegram/YouTube this tab has its own Platform column. */
+const COL_DRM_WEBLINKS = {
+  date: 0,
+  platform: 1,
+  link: 2,
+  channelName: 3,
+  noOfLinks: 4,
+  reported: 6,
+  reportingDate: 7,
+  removed: 8,
+  removalDate: 9,
+} as const;
+
+export function normalizeDrmWebLinkRow(row: string[], id: number): DrmRow | null {
+  const dateRaw = cell(row, COL_DRM_WEBLINKS.date);
+  const link = cell(row, COL_DRM_WEBLINKS.link);
+  const channelName = cell(row, COL_DRM_WEBLINKS.channelName);
+  if (!dateRaw && !link && !channelName) return null;
+
+  const reportingDate = parseDMY(cell(row, COL_DRM_WEBLINKS.reportingDate));
+  const removalDate = parseDMY(cell(row, COL_DRM_WEBLINKS.removalDate));
+
+  return {
+    id: `wl-${id}`,
+    source: "Web-Links",
+    date: parseDMY(dateRaw),
+    dateRaw,
+    platform: cell(row, COL_DRM_WEBLINKS.platform) || "Weblink",
+    category: "",
+    link,
+    channelName,
+    subscribers: null,
+    views: null,
+    linksScanned: null,
+    noOfLinks: parseIntSafe(cell(row, COL_DRM_WEBLINKS.noOfLinks), 0),
+    reported: parseBool(cell(row, COL_DRM_WEBLINKS.reported)),
+    reportingDate,
+    removed: parseBool(cell(row, COL_DRM_WEBLINKS.removed)),
+    removalDate,
+    tatDays: diffDays(reportingDate, removalDate),
+    remarks: "",
+  };
+}
+
+export function normalizeDrmWebLinkRows(rows: string[][]): DrmRow[] {
+  const out: DrmRow[] = [];
+  rows.forEach((row, i) => {
+    const r = normalizeDrmWebLinkRow(row, i);
+    if (r) out.push(r);
+  });
+  return out;
+}
+
+export function combineDrmRows(telegram: DrmRow[], youtube: DrmRow[], webLinks: DrmRow[]): DrmRow[] {
+  return [...telegram, ...youtube, ...webLinks];
+}
+
+export function normalizeDrmRows(rows: string[][]): DrmRow[] {
+  const out: DrmRow[] = [];
+  rows.forEach((row, i) => {
+    const r = normalizeDrmRow(row, i);
     if (r) out.push(r);
   });
   return out;

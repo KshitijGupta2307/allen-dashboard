@@ -70,6 +70,33 @@ export interface CombinedRow {
   remarks: string;
 }
 
+/** The DRM sheet keeps one raw tab per source instead of a combined tracker —
+ * mirrors CombinedSource/CombinedRow's role for the ORM "Scanned by Axio" data. */
+export type DrmSource = "Telegram" | "YouTube" | "Web-Links";
+
+export interface DrmRow {
+  id: string;
+  source: DrmSource;
+  date: Date | null;
+  dateRaw: string;
+  /** "Telegram"/"YouTube" for those tabs; the Web-Links tab's own Platform column (e.g. "Scribd") otherwise. */
+  platform: string;
+  category: string;
+  link: string;
+  channelName: string;
+  subscribers: number | null;
+  views: number | null;
+  /** Telegram-only: the channel-level "Links Scanned" count. */
+  linksScanned: number | null;
+  noOfLinks: number;
+  reported: boolean | null;
+  reportingDate: Date | null;
+  removed: boolean | null;
+  removalDate: Date | null;
+  tatDays: number | null;
+  remarks: string;
+}
+
 export interface ScrappedLinkRow {
   id: number;
   date: Date | null;
