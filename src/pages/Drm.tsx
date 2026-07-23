@@ -7,13 +7,13 @@ import { computeSimpleKpis, funnel, simpleStatus, tatHistogram, trendByWeek } fr
 import type { DrmRow, DrmSource, Status } from "../lib/types";
 import { formatDate, formatInt, formatPct } from "../lib/format";
 import { platformColor } from "../lib/colors";
-import { DrmShell } from "../components/DrmShell";
+import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
 import { LinkIcon, CheckCircleIcon, ShieldCheckIcon, ClockIcon } from "../components/icons";
 import { StatusBadge } from "../components/StatusBadge";
 import { MultiSelect } from "../components/MultiSelect";
 import { StatusSelect } from "../components/StatusSelect";
-import { TabViewSelect, type TabViewOption } from "../components/TabViewSelect";
+import { SingleSelect } from "../components/SingleSelect";
 import { TimelineDateFilter } from "../components/TimelineDateFilter";
 import { RecordTable } from "../components/RecordTable";
 import { LinkCell } from "../components/LinkCell";
@@ -22,7 +22,8 @@ import { FunnelChart } from "../components/charts/FunnelChart";
 import { TatChart } from "../components/charts/TatChart";
 import { LoadingState, ErrorState } from "../components/StatusStates";
 
-const STATUS_OPTIONS: { value: Status; label: string }[] = [
+const 
+STATUS_OPTIONS: { value: Status; label: string }[] = [
   { value: "removed", label: "Removed" },
   { value: "pending", label: "Pending" },
   { value: "not-reported", label: "Not reported" },
@@ -32,7 +33,7 @@ const STATUS_OPTIONS: { value: Status; label: string }[] = [
  * screenshots, not a data table. */
 type Tab = "telegram" | "youtube" | "web-links" | "overall";
 
-const TAB_OPTIONS: TabViewOption<Tab>[] = [
+const TAB_OPTIONS: { value: Tab; label: string }[] = [
   { value: "telegram", label: "Telegram" },
   { value: "youtube", label: "YouTube" },
   { value: "web-links", label: "Web-Links" },
@@ -169,9 +170,10 @@ export function Drm() {
   const tatData = useMemo(() => tatHistogram(filtered), [filtered]);
 
   return (
-    <DrmShell
-      title="DRM"
+    <AppShell
+      title="Axio Scanned"
       subtitle="Anti-piracy takedown tracker"
+      route="drm"
       lastUpdated={lastUpdated}
       loading={loading}
       onRefresh={refresh}
@@ -185,7 +187,7 @@ export function Drm() {
             className="flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
             style={{ boxShadow: "var(--shadow-card)" }}
           >
-            <TabViewSelect label="Source" options={TAB_OPTIONS} value={tab} onChange={handleTabChange} />
+            <SingleSelect label="Source" options={TAB_OPTIONS} value={tab} onChange={handleTabChange} />
 
             <div className="w-px h-5 bg-[var(--border)] mx-1" />
 
@@ -249,6 +251,6 @@ export function Drm() {
           <RecordTable data={filtered} columns={columns} title={TAB_LOG_TITLE[tab]} initialSorting={[{ id: "date", desc: true }]} />
         </main>
       )}
-    </DrmShell>
+    </AppShell>
   );
 }

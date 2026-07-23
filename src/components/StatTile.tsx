@@ -81,7 +81,7 @@ export function StatTile({ label, value, sub, accent = "neutral", icon: Icon, tr
       <div className="flex items-end justify-between gap-3">
         <div className="flex flex-col gap-1 min-w-0">
           <span
-            className="text-[30px] font-bold leading-none tracking-tight tabular truncate"
+            className="text-[22px] sm:text-[26px] xl:text-[30px] font-bold leading-none tracking-tight tabular truncate"
             style={{ color: accent === "neutral" ? "var(--text-primary)" : color }}
           >
             {value}

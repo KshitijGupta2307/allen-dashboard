@@ -1,14 +1,12 @@
 import { useMemo, useState } from "react";
-import { useSubmissions } from "../hooks/useSubmissions";
 import { useSheetTab } from "../hooks/useSheetTab";
-import { fetchProjectWiseSheet, fetchScrappedLinksSheet } from "../lib/sheets";
-import { normalizeProjectWiseRows, normalizeScrappedLinkRows } from "../lib/parse";
-import { combineRows } from "../lib/aggregate";
+import { fetchDrmTelegramSheet, fetchDrmYoutubeSheet, fetchDrmWebLinksSheet } from "../lib/sheets";
+import { normalizeDrmTelegramRows, normalizeDrmYoutubeRows, normalizeDrmWebLinkRows, combineDrmRows } from "../lib/parse";
 import { AppShell } from "../components/AppShell";
 import { StatTile } from "../components/StatTile";
 import { LinkIcon, CheckCircleIcon, ShieldCheckIcon, ClockIcon, GaugeIcon } from "../components/icons";
+import { SingleSelect } from "../components/SingleSelect";
 import { Select } from "../components/Select";
-import { TabViewSelect, type TabViewOption } from "../components/TabViewSelect";
 import { WeeklyPlatformTable } from "../components/report/WeeklyPlatformTable";
 import { PlatformBreakdownCards } from "../components/report/PlatformBreakdownCards";
 import { PlatformBreakdownTable } from "../components/report/PlatformBreakdownTable";
@@ -39,11 +37,12 @@ function isNotAfterToday(year: number, month: number): boolean {
   return year < now.getFullYear() || (year === now.getFullYear() && month <= now.getMonth());
 }
 
-type Source = "allen-submission" | "scanned-by-axio" | "overall";
+type Source = "telegram" | "youtube" | "web-links" | "overall";
 
-const SOURCE_OPTIONS: TabViewOption<Source>[] = [
-  { value: "allen-submission", label: "Allen Submission" },
-  { value: "scanned-by-axio", label: "Scanned by Axio" },
+const SOURCE_OPTIONS: { value: Source; label: string }[] = [
+  { value: "telegram", label: "Telegram" },
+  { value: "youtube", label: "YouTube" },
+  { value: "web-links", label: "Web-Links" },
   { value: "overall", label: "Overall" },
 ];
 
@@ -51,16 +50,17 @@ function maxDate(...dates: (Date | null)[]): Date | null {
   return dates.reduce<Date | null>((max, d) => (d && (!max || d > max) ? d : max), null);
 }
 
-export function OverallReport() {
-  const submissions = useSubmissions();
-  const projectWise = useSheetTab(fetchProjectWiseSheet, normalizeProjectWiseRows);
-  const scrappedLinks = useSheetTab(fetchScrappedLinksSheet, normalizeScrappedLinkRows);
-  const axioCombined = useMemo(
-    () => combineRows(projectWise.data, scrappedLinks.data),
-    [projectWise.data, scrappedLinks.data],
+export function DrmReport() {
+  const telegram = useSheetTab(fetchDrmTelegramSheet, normalizeDrmTelegramRows);
+  const youtube = useSheetTab(fetchDrmYoutubeSheet, normalizeDrmYoutubeRows);
+  const webLinks = useSheetTab(fetchDrmWebLinksSheet, normalizeDrmWebLinkRows);
+
+  const overallData = useMemo(
+    () => combineDrmRows(telegram.data, youtube.data, webLinks.data),
+    [telegram.data, youtube.data, webLinks.data],
   );
 
-  const [source, setSource] = useState<Source>("allen-submission");
+  const [source, setSource] = useState<Source>("overall");
   const [monthKey, setMonthKey] = useState<string | null>(null);
   const [tatBucket, setTatBucket] = useState<TatBucket>("1");
 
@@ -69,35 +69,25 @@ export function OverallReport() {
     setMonthKey(null);
   };
 
-  const overallSource = useMemo(
-    () => [...submissions.data, ...axioCombined] as ReportableRow[],
-    [submissions.data, axioCombined],
-  );
-
-  const data: ReportableRow[] =
-    source === "allen-submission" ? submissions.data : source === "scanned-by-axio" ? axioCombined : overallSource;
-  const loading =
-    source === "allen-submission"
-      ? submissions.loading
-      : source === "scanned-by-axio"
-        ? projectWise.loading || scrappedLinks.loading
-        : submissions.loading || projectWise.loading || scrappedLinks.loading;
-  const error =
-    source === "allen-submission"
-      ? submissions.error
-      : source === "scanned-by-axio"
-        ? (projectWise.error ?? scrappedLinks.error)
-        : (submissions.error ?? projectWise.error ?? scrappedLinks.error);
-  const lastUpdated =
-    source === "allen-submission"
-      ? submissions.lastUpdated
-      : source === "scanned-by-axio"
-        ? maxDate(projectWise.lastUpdated, scrappedLinks.lastUpdated)
-        : maxDate(submissions.lastUpdated, projectWise.lastUpdated, scrappedLinks.lastUpdated);
+  const active =
+    source === "telegram"
+      ? telegram
+      : source === "youtube"
+        ? youtube
+        : source === "web-links"
+          ? webLinks
+          : {
+              data: overallData,
+              loading: telegram.loading || youtube.loading || webLinks.loading,
+              error: telegram.error ?? youtube.error ?? webLinks.error,
+              lastUpdated: maxDate(telegram.lastUpdated, youtube.lastUpdated, webLinks.lastUpdated),
+            };
+  const data = active.data as ReportableRow[];
+  const { loading, error, lastUpdated } = active;
   const refresh = () => {
-    submissions.refresh();
-    projectWise.refresh();
-    scrappedLinks.refresh();
+    telegram.refresh();
+    youtube.refresh();
+    webLinks.refresh();
   };
 
   const months = useMemo(() => availableMonths(data), [data]);
@@ -126,9 +116,9 @@ export function OverallReport() {
 
   return (
     <AppShell
-      title="Overall Report"
-      subtitle="Monthly performance summary"
-      route="overall-report"
+      title="Report"
+      subtitle="Monthly takedown performance summary"
+      route="drm-report"
       lastUpdated={lastUpdated}
       loading={loading}
       onRefresh={refresh}
@@ -144,7 +134,7 @@ export function OverallReport() {
             className="flex items-center justify-between gap-3 flex-wrap rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] px-4 py-3"
             style={{ boxShadow: "var(--shadow-card)" }}
           >
-            <TabViewSelect label="Source" options={SOURCE_OPTIONS} value={source} onChange={handleSourceChange} />
+            <SingleSelect label="Source" options={SOURCE_OPTIONS} value={source} onChange={handleSourceChange} />
 
             {selected && (
               <div className="flex items-center gap-2">
@@ -165,14 +155,14 @@ export function OverallReport() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
                 <StatTile
-                  label="Total links scanned"
+                  label="Total scanned"
                   value={formatInt(overall.linksScanned)}
                   accent="brand"
                   icon={LinkIcon}
                   trend={weeks.map((w) => w.linksScanned)}
                 />
                 <StatTile
-                  label="Total approved"
+                  label="Total reported"
                   value={formatInt(overall.linksApproved)}
                   accent="info"
                   icon={CheckCircleIcon}
@@ -186,7 +176,7 @@ export function OverallReport() {
                   trend={weeks.map((w) => w.linksRemoved)}
                 />
                 <StatTile
-                  label="Pending links"
+                  label="Pending removal"
                   value={formatInt(overall.pending)}
                   accent={overall.pending > 0 ? "warning" : "neutral"}
                   icon={ClockIcon}
@@ -202,7 +192,7 @@ export function OverallReport() {
 
               <PlatformBreakdownCards
                 rows={platformRows}
-                subtitle={`Performance across all content platforms — ${selected.label}`}
+                subtitle={`Performance across all DRM sources — ${selected.label}`}
               />
 
               <WeeklyPlatformTable weeks={weeks} overall={overall} columns={columns} monthLabel={selected.label} />

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Route } from "../lib/routes";
+import { modeOf, type Route } from "../lib/routes";
 import { CloseIcon, GaugeIcon, RadarIcon, ReportIcon } from "./icons";
 
 interface SidebarProps {
@@ -8,16 +8,24 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
-const NAV_ITEMS: { route: Route; label: string; href: string; icon: typeof GaugeIcon }[] = [
+type NavItem = { route: Route; label: string; href: string; icon: typeof GaugeIcon };
+
+const ORM_NAV_ITEMS: NavItem[] = [
   { route: "dashboard", label: "Allen Submission", href: "#/", icon: GaugeIcon },
   { route: "scanned-by-axio", label: "Scanned by Axio", href: "#/scanned-by-axio", icon: RadarIcon },
   { route: "overall-report", label: "Overall Report", href: "#/overall-report", icon: ReportIcon },
 ];
 
+const DRM_NAV_ITEMS: NavItem[] = [
+  { route: "drm", label: "Axio Scanned", href: "#/drm", icon: RadarIcon },
+  { route: "drm-report", label: "Report", href: "#/drm-report", icon: ReportIcon },
+];
+
 function NavList({ route, onNavigate }: { route: Route; onNavigate: () => void }) {
+  const items = modeOf(route) === "drm" ? DRM_NAV_ITEMS : ORM_NAV_ITEMS;
   return (
     <nav className="flex flex-col gap-1 px-3">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const active = item.route === route;
         return (
